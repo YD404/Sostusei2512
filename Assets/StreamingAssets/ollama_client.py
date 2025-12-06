@@ -1,0 +1,61 @@
+import ollama
+import json
+import re
+import logging
+import base64
+import os
+import prompts
+
+# Configure basic logging
+logger = logging.getLogger(__name__)
+
+class OllamaClient:
+    def __init__(self, model_name="qwen2.5vl:7b"):
+        self.model_name = model_name
+
+    def extract_json(self, text):
+        try:
+            match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
+            if match: return json.loads(match.group(1))
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match: return json.loads(match.group(0))
+            return None
+        except Exception:
+            return None
+
+    def analyze_image(self, image_path: str) -> dict:
+        """
+        Analyzes the image using local Ollama (Vision Model).
+        """
+        if not os.path.exists(image_path):
+            logger.error(f"Image not found: {image_path}")
+            return None
+
+        logger.info(f"Analyzing image (Local Ollama): {os.path.basename(image_path)}")
+
+        try:
+            with open(image_path, "rb") as f:
+                image_data = base64.b64encode(f.read()).decode("utf-8")
+
+            analysis_response = ollama.chat(
+                model=self.model_name,
+                messages=[{
+                    "role": "user",
+                    "content": prompts.ANALYSIS_PROMPT,
+                    "images": [image_data]
+                }],
+                options={"temperature": 0.2}
+            )
+            
+            content = analysis_response['message']['content']
+            analysis_data = self.extract_json(content)
+            
+            if not analysis_data:
+                logger.warning("Local Analysis JSON parsing failed.")
+                return None
+                
+            return analysis_data
+
+        except Exception as e:
+            logger.error(f"Local Image Analysis Failed: {e}")
+            return None
