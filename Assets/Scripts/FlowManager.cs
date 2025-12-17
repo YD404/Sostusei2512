@@ -15,6 +15,9 @@ public class FlowManager : MonoBehaviour
     [Tooltip("サブディスプレイ用コントローラー。未設定でも動作します。")]
     [SerializeField] private SubPanelController subPanelController;
 
+    [Tooltip("メッセージ履歴表示。未設定でも動作します。")]
+    [SerializeField] private MessageHistoryDisplay messageHistoryDisplay;
+
     // 各状態の固定表示時間（秒）
     private const float STATE_DURATION = 10.0f;
     private float pendingMessageDuration = -1.0f;
@@ -117,11 +120,13 @@ public class FlowManager : MonoBehaviour
         {
             case FlowState.Waiting:
                 panelController.ShowWaitingPanel();
-                if (subPanelController != null) subPanelController.SetStatus("");
+                if (subPanelController != null) subPanelController.HideMessage();
+                if (messageHistoryDisplay != null) messageHistoryDisplay.ShowHistory();
                 break;
 
             case FlowState.Scanning:
                 panelController.ShowScanningPanel();
+                if (messageHistoryDisplay != null) messageHistoryDisplay.HideHistory();
                 break;
 
             case FlowState.ScanComplete:
@@ -132,7 +137,7 @@ public class FlowManager : MonoBehaviour
 
             case FlowState.Message:
                 panelController.ShowMessagePanel();
-                if (subPanelController != null) subPanelController.SetStatus("");
+                if (subPanelController != null) subPanelController.ShowMessage();
                 if (pythonMessageDisplay != null)
                 {
                     pythonMessageDisplay.StartTypewriter();

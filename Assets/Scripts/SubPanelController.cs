@@ -2,92 +2,183 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// サブディスプレイ用アーカイブコントローラー。
-/// ステート切り替えではなく、ログエントリを蓄積していく方式。
-/// FlowManagerからAddLogEntry()を呼び出してメッセージを追加する。
+/// サブディスプレイ用コントローラー。
+/// 表示エリアを統一し、フローに応じて表示方式を切り替える。
+/// - Message フロー: logItemPrefab を使用して表示（タイプライター効果付き）
+/// - その他のフロー: 単一 TMP にテキスト表示
 /// </summary>
 public class SubPanelController : MonoBehaviour
 {
-    [Header("Archive Container")]
-    [Tooltip("ログアイテムを追加するコンテナ（ScrollViewのContent等）")]
-    [SerializeField] private Transform contentContainer;
+    [Header("Unified Display Area")]
+    [Tooltip("統一表示エリア（ログとステータス両方に使用）")]
+    [SerializeField] private TextMeshProUGUI unifiedDisplayTMP;
 
-    [Header("Log Item Prefab")]
-    [Tooltip("ログエントリのプレハブ（TextMeshProUGUIを持つ）")]
+    [Header("Message Log (Prefab Mode)")]
+    [Tooltip("Message 用ログアイテムのプレハブ（TextMeshProUGUIを持つ）")]
     [SerializeField] private GameObject logItemPrefab;
 
-    [Header("Fallback Text (仮置き)")]
-    [Tooltip("プレハブ未設定時に直接テキストを追加するTMP")]
-    [SerializeField] private TextMeshProUGUI fallbackText;
+    [Tooltip("logItemPrefab を追加するコンテナ")]
+    [SerializeField] private Transform prefabContainer;
 
-    [Header("Status / Log Display")]
-    [Tooltip("Pythonログを表示するLogBufferDisplay（推奨）")]
-    [SerializeField] private LogBufferDisplay logBufferDisplay;
+    // 現在の表示モード
+    private enum DisplayMode { Status, Message }
+    private DisplayMode currentMode = DisplayMode.Status;
 
-    [Tooltip("フォールバック: ステータス表示用TMP（LogBufferDisplay未設定時）")]
-    [SerializeField] private TextMeshProUGUI statusText;
+    // 生成されたプレハブインスタンス
+    private GameObject currentPrefabInstance;
+
+    // 保存されたメッセージ（FlowState.Message 時に表示）
+    private string pendingMessage = "";
+    private string pendingCredit = "";
+    private bool hasPendingMessage = false;
 
     private void Start()
     {
-        if (contentContainer == null && fallbackText == null)
+        // 初期状態: ステータスモード
+        SwitchToStatusMode();
+    }
+
+    /// <summary>
+    /// ステータス（Pythonログ）を更新する。Scanning 等で使用。
+    /// 単一 TMP にテキストを直接表示する。
+    /// </summary>
+    /// <param name="status">表示するログ文字列（空文字でクリア）</param>
+    public void SetStatus(string status)
+    {
+        // Message モード中は SetStatus を無視（プレハブを保護）
+        if (currentMode == DisplayMode.Message)
         {
-            Debug.LogWarning("SubPanelController: ContentContainerまたはFallbackTextを設定してください。");
+            Debug.Log("[SubPanelController] Message モード中のため SetStatus を無視");
+            return;
         }
 
-        // 初期化時にfallbackTextをクリア
-        if (fallbackText != null)
+        // Message モードの場合は Status モードに切り替え
+        if (currentMode != DisplayMode.Status)
         {
-            fallbackText.text = "";
+            SwitchToStatusMode();
+        }
+
+        if (unifiedDisplayTMP != null)
+        {
+            if (string.IsNullOrEmpty(status))
+            {
+                unifiedDisplayTMP.text = "";
+            }
+            else
+            {
+                // 既存テキストに追記（新しいログが上）
+                if (string.IsNullOrEmpty(unifiedDisplayTMP.text))
+                {
+                    unifiedDisplayTMP.text = status;
+                }
+                else
+                {
+                    // 最大行数を制限（5行程度）
+                    string[] lines = unifiedDisplayTMP.text.Split('\n');
+                    if (lines.Length >= 5)
+                    {
+                        // 古い行を削除
+                        string trimmed = string.Join("\n", lines, 0, 4);
+                        unifiedDisplayTMP.text = status + "\n" + trimmed;
+                    }
+                    else
+                    {
+                        unifiedDisplayTMP.text = status + "\n" + unifiedDisplayTMP.text;
+                    }
+                }
+            }
         }
     }
 
     /// <summary>
-    /// ログエントリを追加する。FlowManagerから呼び出される。
+    /// ログエントリを保存する。Message フローで使用。
+    /// 実際の表示は ShowMessage() で行う。
     /// </summary>
     /// <param name="message">メッセージ本文</param>
     /// <param name="credit">クレジット情報（CV名など）</param>
     public void AddLogEntry(string message, string credit = "")
     {
-        Debug.Log($"[SubPanelController] ログ追加: {message} / Credit: {credit}");
+        Debug.Log($"[SubPanelController] メッセージ保存: {message} / Credit: {credit}");
+
+        // メッセージを保存（表示は ShowMessage() で行う）
+        pendingMessage = message;
+        pendingCredit = credit;
+        hasPendingMessage = true;
+    }
+
+    /// <summary>
+    /// FlowState.Message 時に呼び出される。
+    /// 保存されたメッセージをプレハブで表示し、タイプライター効果を開始する。
+    /// </summary>
+    public void ShowMessage()
+    {
+        Debug.Log($"[SubPanelController] ShowMessage: hasPending={hasPendingMessage}, message='{pendingMessage}'");
+
+        if (!hasPendingMessage)
+        {
+            Debug.LogWarning("[SubPanelController] ShowMessage: 保存されたメッセージがありません");
+            return;
+        }
+
+        // Message モードに切り替え
+        SwitchToMessageMode();
 
         // プレハブが設定されている場合
-        if (logItemPrefab != null && contentContainer != null)
+        if (logItemPrefab != null && prefabContainer != null)
         {
-            GameObject newItem = Instantiate(logItemPrefab, contentContainer);
+            // 既存のプレハブインスタンスを削除（単一表示）
+            ClearPrefabInstance();
+
+            // 新しいインスタンスを生成
+            currentPrefabInstance = Instantiate(logItemPrefab, prefabContainer);
             
             // プレハブ内のTMPを取得してテキスト設定
-            TextMeshProUGUI tmp = newItem.GetComponentInChildren<TextMeshProUGUI>();
+            TextMeshProUGUI tmp = currentPrefabInstance.GetComponentInChildren<TextMeshProUGUI>();
             if (tmp != null)
             {
-                string displayText = string.IsNullOrEmpty(credit) 
-                    ? message 
-                    : $"{message}\n<size=70%><color=#888888>{credit}</color></size>";
+                string displayText = string.IsNullOrEmpty(pendingCredit) 
+                    ? pendingMessage 
+                    : $"{pendingMessage}\n<size=70%><color=#888888>{pendingCredit}</color></size>";
                 tmp.text = displayText;
-            }
 
-            // TODO: スライドインアニメーション等の演出を追加
+                // タイプライター効果を開始
+                TypewriterEffectTMP typewriter = currentPrefabInstance.GetComponentInChildren<TypewriterEffectTMP>();
+                if (typewriter != null)
+                {
+                    typewriter.StartDisplay();
+                    Debug.Log("[SubPanelController] タイプライター効果を開始");
+                }
+                else
+                {
+                    Debug.Log("[SubPanelController] TypewriterEffectTMP が見つかりません（即座に表示）");
+                }
+            }
         }
-        // フォールバック: 直接テキストに追記
-        else if (fallbackText != null)
+        // フォールバック: 統一TMPに表示
+        else if (unifiedDisplayTMP != null)
         {
-            string entry = string.IsNullOrEmpty(credit) 
-                ? message 
-                : $"{message} ({credit})";
-            
-            // 改行して追記（上に新しいログ）
-            if (string.IsNullOrEmpty(fallbackText.text))
-            {
-                fallbackText.text = entry;
-            }
-            else
-            {
-                fallbackText.text = entry + "\n\n" + fallbackText.text;
-            }
+            string entry = string.IsNullOrEmpty(pendingCredit) 
+                ? pendingMessage 
+                : $"{pendingMessage} ({pendingCredit})";
+            unifiedDisplayTMP.text = entry;
         }
         else
         {
-            Debug.LogWarning("[SubPanelController] ログを表示する手段がありません。ContentContainerまたはFallbackTextを設定してください。");
+            Debug.LogWarning("[SubPanelController] 表示手段がありません。unifiedDisplayTMP または logItemPrefab を設定してください。");
         }
+
+        // 保存メッセージをクリア
+        hasPendingMessage = false;
+    }
+
+    /// <summary>
+    /// メッセージ表示を終了し、ステータスモードに戻る。
+    /// FlowState が Waiting に戻るときに呼び出される。
+    /// </summary>
+    public void HideMessage()
+    {
+        Debug.Log("[SubPanelController] HideMessage: メッセージ表示を終了");
+        SwitchToStatusMode();
     }
 
     /// <summary>
@@ -95,52 +186,62 @@ public class SubPanelController : MonoBehaviour
     /// </summary>
     public void ClearArchive()
     {
-        if (contentContainer != null)
+        ClearPrefabInstance();
+
+        if (unifiedDisplayTMP != null)
         {
-            foreach (Transform child in contentContainer)
-            {
-                Destroy(child.gameObject);
-            }
+            unifiedDisplayTMP.text = "";
         }
 
-        if (fallbackText != null)
-        {
-            fallbackText.text = "";
-        }
+        // 保存メッセージもクリア
+        pendingMessage = "";
+        pendingCredit = "";
+        hasPendingMessage = false;
 
         Debug.Log("[SubPanelController] アーカイブをクリアしました。");
     }
 
     /// <summary>
-    /// ステータス（Pythonログ）を更新する。FlowManagerから呼び出される。
-    /// LogBufferDisplayが設定されている場合はそちらにログを追加する。
+    /// ステータスモードに切り替え（TMP表示）
     /// </summary>
-    /// <param name="status">表示するログ文字列（空文字でクリア）</param>
-    public void SetStatus(string status)
+    private void SwitchToStatusMode()
     {
-        // 空文字の場合はクリア -> アーカイブ再表示
-        if (string.IsNullOrEmpty(status))
-        {
-            if (logBufferDisplay != null) logBufferDisplay.ClearLogs();
-            if (statusText != null) statusText.text = "";
-            
-            // アーカイブを表示
-            if (contentContainer != null) contentContainer.gameObject.SetActive(true);
-            return;
-        }
+        currentMode = DisplayMode.Status;
 
-        // ステータス表示中 -> アーカイブ非表示（重なり防止）
-        if (contentContainer != null) contentContainer.gameObject.SetActive(false);
+        // プレハブインスタンスを削除
+        ClearPrefabInstance();
 
-        // LogBufferDisplayが設定されている場合はそちらを優先
-        if (logBufferDisplay != null)
+        // TMP を表示
+        if (unifiedDisplayTMP != null) unifiedDisplayTMP.gameObject.SetActive(true);
+
+        // テキストをクリア
+        if (unifiedDisplayTMP != null) unifiedDisplayTMP.text = "";
+
+        Debug.Log("[SubPanelController] ステータスモードに切り替え");
+    }
+
+    /// <summary>
+    /// メッセージモードに切り替え（プレハブ表示）
+    /// </summary>
+    private void SwitchToMessageMode()
+    {
+        currentMode = DisplayMode.Message;
+
+        // TMP を非表示（プレハブを表示するため）
+        if (unifiedDisplayTMP != null) unifiedDisplayTMP.gameObject.SetActive(false);
+
+        Debug.Log("[SubPanelController] メッセージモードに切り替え");
+    }
+
+    /// <summary>
+    /// プレハブインスタンスを削除
+    /// </summary>
+    private void ClearPrefabInstance()
+    {
+        if (currentPrefabInstance != null)
         {
-            logBufferDisplay.AddLog(status);
-        }
-        // フォールバック: 直接TMPに設定
-        else if (statusText != null)
-        {
-            statusText.text = status;
+            Destroy(currentPrefabInstance);
+            currentPrefabInstance = null;
         }
     }
 }

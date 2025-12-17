@@ -43,6 +43,9 @@ public class SlideAnimation : MonoBehaviour
     {
         if (rectTransform == null) return;
         
+        // 非アクティブなGameObjectではコルーチンを開始できないためチェック
+        if (!gameObject.activeInHierarchy) return;
+        
         if (currentAnimation != null)
         {
             StopCoroutine(currentAnimation);
@@ -58,6 +61,9 @@ public class SlideAnimation : MonoBehaviour
     public void SlideOut()
     {
         if (rectTransform == null) return;
+        
+        // 非アクティブなGameObjectではコルーチンを開始できないためチェック
+        if (!gameObject.activeInHierarchy) return;
         
         if (currentAnimation != null)
         {
