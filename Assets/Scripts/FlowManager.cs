@@ -14,6 +14,12 @@ public class FlowManager : MonoBehaviour
     [Tooltip("サブディスプレイ用コントローラー。未設定でも動作します。")]
     [SerializeField] private SubPanelController subPanelController;
 
+    [Header("Rune Effect (Optional)")]
+    [Tooltip("ScanComplete時のルーンエフェクト。未設定でも動作します。")]
+    [SerializeField] private RuneSpawner runeSpawner;
+    [Tooltip("チェックON: Pythonからの全ログを使用 / OFF: [[MESSAGE]]のみ使用")]
+    [SerializeField] private bool useAllPythonLogsForRune = false;
+
     // 各状態の固定表示時間（秒）
     private const float STATE_DURATION = 10.0f;
     private float pendingMessageDuration = -1.0f; // 音声からリクエストされた時間（未適用なら正の値）
@@ -32,6 +38,9 @@ public class FlowManager : MonoBehaviour
     // アーカイブ用: 現在のメッセージとクレジットを保持
     private string currentMessage = "";
     private string currentCredit = "";
+    
+    // RuneSpawner用: 取得前に受信したメッセージをバッファ
+    private string pendingRuneMessage = null;
 
     void Start()
     {
@@ -62,6 +71,24 @@ public class FlowManager : MonoBehaviour
             if (pythonMessageDisplay != null)
             {
                 Debug.Log("[FlowManager] PanelController から PythonMessageTMP を自動取得しました。");
+            }
+        }
+
+        // ★追加: RuneSpawner も PanelController から取得
+        if (runeSpawner == null && panelController != null)
+        {
+            runeSpawner = panelController.RuneSpawnerDisplay;
+            if (runeSpawner != null)
+            {
+                Debug.Log("[FlowManager] PanelController から RuneSpawner を自動取得しました。");
+                
+                // バッファにメッセージがあれば送信
+                if (!string.IsNullOrEmpty(pendingRuneMessage))
+                {
+                    Debug.Log($"[FlowManager] バッファのメッセージをRuneSpawnerに送信: {pendingRuneMessage}");
+                    runeSpawner.SetMessage(pendingRuneMessage);
+                    pendingRuneMessage = null;
+                }
             }
         }
     }
@@ -168,6 +195,21 @@ public class FlowManager : MonoBehaviour
     {
         Debug.Log($"[Python受信] {line}");
 
+        // ★デバッグ用: 全ログをRuneSpawnerに転送
+        if (useAllPythonLogsForRune)
+        {
+            if (runeSpawner != null)
+            {
+                runeSpawner.SetMessage(line);
+            }
+            else
+            {
+                // まだ取得されていない場合はバッファに保存
+                pendingRuneMessage = line;
+                Debug.Log($"[FlowManager] RuneSpawner未取得のためバッファに保存: {line}");
+            }
+        }
+
         // 1. 開始タグ or ログ検知
         if (line.Contains("[[STATE_START]]") || line.Contains("Analyzing image (Local Ollama):"))
         {
@@ -208,6 +250,12 @@ public class FlowManager : MonoBehaviour
             if (pythonMessageDisplay != null)
             {
                 pythonMessageDisplay.ReceiveMessage(messageBody);
+            }
+
+            // ★追加: RuneSpawnerにもメッセージを転送
+            if (runeSpawner != null)
+            {
+                runeSpawner.SetMessage(messageBody);
             }
         }
         // 3. 完了タグ or ログ検知

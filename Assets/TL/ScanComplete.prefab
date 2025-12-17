@@ -400,12 +400,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8de6f0d25c66c48ce8f9786dd805addc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  message: tpohjtpehoubaoboeepbehto3whjbdbestht
+  message: 
   runePrefab: {fileID: 7002297846833517263, guid: 1871372fd7b7747e68c68893c36a2e0f, type: 3}
   enchantTable: {fileID: 9055408171719337411}
   charInterval: 0.1
   loopInterval: 2
   loopEnabled: 0
+  autoStartOnEnable: 0
 --- !u!1 &8470146862946148459
 GameObject:
   m_ObjectHideFlags: 0

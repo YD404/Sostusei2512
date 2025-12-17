@@ -30,6 +30,9 @@ public class PanelController : MonoBehaviour
     // ★追加: Message プレハブ内の PythonMessageTMP を取得するプロパティ
     public PythonMessageTMP MessageDisplay { get; private set; }
 
+    // ★追加: ScanComplete プレハブ内の RuneSpawner を取得するプロパティ
+    public RuneSpawner RuneSpawnerDisplay { get; private set; }
+
     [Header("Skip Settings")]
     [Tooltip("ScanComplete Panelの表示をスキップするか")]
     [SerializeField] private bool skipScanComplete = false;
@@ -62,6 +65,20 @@ public class PanelController : MonoBehaviour
             else
             {
                 Debug.LogWarning("[PanelController] Message プレハブ内に PythonMessageTMP が見つかりません。");
+            }
+        }
+
+        // ★追加: ScanComplete プレハブ内の RuneSpawner を取得
+        if (instanceScanComplete != null)
+        {
+            RuneSpawnerDisplay = instanceScanComplete.GetComponentInChildren<RuneSpawner>(true);
+            if (RuneSpawnerDisplay != null)
+            {
+                Debug.Log("[PanelController] RuneSpawner を検出しました。");
+            }
+            else
+            {
+                Debug.LogWarning("[PanelController] ScanComplete プレハブ内に RuneSpawner が見つかりません。");
             }
         }
 

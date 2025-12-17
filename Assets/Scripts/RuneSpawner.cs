@@ -4,7 +4,7 @@ using System.Collections;
 public class RuneSpawner : MonoBehaviour
 {
     [Header("設定")]
-    [TextArea] public string message = "MAGIC"; // 飛ばす文字
+    [TextArea] public string message = "MAGIC"; // 飛ばす文字（デフォルト値、Pythonから上書きされる）
     public GameObject runePrefab; // 文字プレハブ
     public Transform enchantTable; // 吸い込まれる先
     
@@ -12,11 +12,95 @@ public class RuneSpawner : MonoBehaviour
     public float charInterval = 0.1f; // "1文字"が出る間隔
     public float loopInterval = 2.0f; // "単語全体"を繰り返す間隔
     public bool loopEnabled = true;   // ループのオン/オフ
+    
+    [Header("開始条件")]
+    [Tooltip("ON: パネル表示時にデフォルトメッセージで自動開始\nOFF: Pythonからメッセージ受信時のみ開始（推奨）")]
+    public bool autoStartOnEnable = false;
 
-    void Start()
+    private Coroutine spawnCoroutine;
+    private bool hasPendingMessage = false; // 外部からメッセージを受け取ったフラグ
+
+    void OnEnable()
     {
-        // ゲーム開始時に自動スタート
-        StartCoroutine(AutoSpawnLoop());
+        Debug.Log($"[RuneSpawner] OnEnable: autoStartOnEnable={autoStartOnEnable}, hasPendingMessage={hasPendingMessage}, message='{message}'");
+        
+        // autoStartOnEnable がON、または Pythonからメッセージを受け取った場合のみ開始
+        if (autoStartOnEnable || hasPendingMessage)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                Debug.Log($"[RuneSpawner] OnEnable: スポーン開始します");
+                StartSpawning();
+            }
+            hasPendingMessage = false; // フラグをリセット
+        }
+        else
+        {
+            Debug.Log($"[RuneSpawner] OnEnable: スポーンしません（条件未満たたず）");
+        }
+    }
+
+    void OnDisable()
+    {
+        StopSpawning();
+    }
+
+    /// <summary>
+    /// Pythonからのメッセージを受け取って、ルーン文字として生成開始
+    /// </summary>
+    public void SetMessage(string newMessage)
+    {
+        Debug.Log($"[RuneSpawner] SetMessage呼び出し: newMessage='{newMessage}', activeInHierarchy={gameObject.activeInHierarchy}");
+        
+        if (string.IsNullOrEmpty(newMessage)) return;
+        
+        message = newMessage;
+        Debug.Log($"[RuneSpawner] メッセージ更新完了: message='{message}'");
+        
+        // GameObjectがアクティブな場合のみ開始
+        // 非アクティブの場合はOnEnableで開始される
+        if (gameObject.activeInHierarchy)
+        {
+            Debug.Log($"[RuneSpawner] アクティブなので即座に開始");
+            StartSpawning();
+        }
+        else
+        {
+            // 非アクティブの場合はフラグを立てておく
+            hasPendingMessage = true;
+            Debug.Log($"[RuneSpawner] 非アクティブなのでhasPendingMessage=trueに設定");
+        }
+    }
+
+    /// <summary>
+    /// ルーン文字の生成を開始
+    /// </summary>
+    public void StartSpawning()
+    {
+        Debug.Log($"[RuneSpawner] StartSpawning: activeInHierarchy={gameObject.activeInHierarchy}");
+        
+        // 非アクティブなGameObjectではコルーチンを開始できない
+        if (!gameObject.activeInHierarchy)
+        {
+            Debug.Log($"[RuneSpawner] StartSpawning: 非アクティブのためスキップ");
+            return;
+        }
+        
+        StopSpawning();
+        Debug.Log($"[RuneSpawner] StartSpawning: コルーチン開始します - message='{message}'");
+        spawnCoroutine = StartCoroutine(AutoSpawnLoop());
+    }
+
+    /// <summary>
+    /// ルーン文字の生成を停止
+    /// </summary>
+    public void StopSpawning()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
     }
 
     IEnumerator AutoSpawnLoop()
@@ -34,9 +118,9 @@ public class RuneSpawner : MonoBehaviour
         } while (loopEnabled);
     }
 
-    // 1回のメッセージ生成処理
     IEnumerator SpawnStringRoutine()
     {
+        Debug.Log($"[RuneSpawner] SpawnStringRoutine開始: 表示するメッセージ = '{message}'");
         char[] characters = message.ToCharArray();
 
         foreach (char c in characters)
