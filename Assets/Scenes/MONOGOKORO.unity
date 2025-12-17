@@ -831,7 +831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCanvasRoot: {fileID: 4289483918548393628}
-  prefabWaiting: {fileID: -2987809118837318493, guid: ab142da3c6b904cfb85f8077db7c95af, type: 3}
+  prefabWaiting: {fileID: -2987809118837318493, guid: dcc9c24c9567643d08f3380f738b835a, type: 3}
   prefabScanning: {fileID: -2987809118837318493, guid: c7a81cc10b06040db8c644ed61b7973a, type: 3}
   prefabScanComplete: {fileID: -2987809118837318493, guid: dcc9c24c9567643d08f3380f738b835a, type: 3}
   prefabMessage: {fileID: -2987809118837318493, guid: 760bc259d6e5b48beb506e7466c3f386, type: 3}
