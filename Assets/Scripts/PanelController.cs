@@ -6,12 +6,29 @@ using UnityEngine;
 /// </summary>
 public class PanelController : MonoBehaviour
 {
-    [Header("UI Panels")]
-    [SerializeField] private GameObject panelWaiting;
-    [SerializeField] private GameObject panelScanning;
-    [SerializeField] private GameObject panelScanComplete;
-    [SerializeField] private GameObject panelMessage;
-    [SerializeField] private GameObject panelEnd;
+
+
+    [Header("Main Canvas Settings")]
+    [Tooltip("全てのパネルの親となるCanvasのTransform")]
+    [SerializeField] private Transform mainCanvasRoot;
+
+    [Header("Timeline State Prefabs")]
+    // これらはシーン上のオブジェクトではなく、Projectウィンドウのプレハブをアサインする
+    [SerializeField] private TimelineState prefabWaiting;
+    [SerializeField] private TimelineState prefabScanning;
+    [SerializeField] private TimelineState prefabScanComplete;
+    [SerializeField] private TimelineState prefabMessage;
+    [SerializeField] private TimelineState prefabEnd;
+
+    // 実際に生成したインスタンスを保持する変数
+    private TimelineState instanceWaiting;
+    private TimelineState instanceScanning;
+    private TimelineState instanceScanComplete;
+    private TimelineState instanceMessage;
+    private TimelineState instanceEnd;
+
+    // ★追加: Message プレハブ内の PythonMessageTMP を取得するプロパティ
+    public PythonMessageTMP MessageDisplay { get; private set; }
 
     [Header("Skip Settings")]
     [Tooltip("ScanComplete Panelの表示をスキップするか")]
@@ -19,22 +36,72 @@ public class PanelController : MonoBehaviour
     [Tooltip("End Panelの表示をスキップするか")]
     [SerializeField] private bool skipEnd = false;
 
-    //void Start()
-    //{
-    //    // 初期状態として待機画面のみ表示
-    //    ShowWaitingPanel();
-    //}
+    private void Start()
+    {
+        // プレハブからインスタンスを生成し、初期状態は非表示(Exit)にしておく
+        if (mainCanvasRoot == null)
+        {
+            Debug.LogError("PanelController: MainCanvasRoot is not assigned!");
+            return;
+        }
+
+        instanceWaiting = SetupInstance(prefabWaiting, "State_Waiting");
+        instanceScanning = SetupInstance(prefabScanning, "State_Scanning");
+        instanceScanComplete = SetupInstance(prefabScanComplete, "State_ScanComplete");
+        instanceMessage = SetupInstance(prefabMessage, "State_Message");
+        instanceEnd = SetupInstance(prefabEnd, "State_End");
+
+        // ★追加: Message プレハブ内の PythonMessageTMP を取得
+        if (instanceMessage != null)
+        {
+            MessageDisplay = instanceMessage.GetComponentInChildren<PythonMessageTMP>(true);
+            if (MessageDisplay != null)
+            {
+                Debug.Log("[PanelController] PythonMessageTMP を検出しました。");
+            }
+            else
+            {
+                Debug.LogWarning("[PanelController] Message プレハブ内に PythonMessageTMP が見つかりません。");
+            }
+        }
+
+        // 初期状態として待機画面を表示（FlowManagerがStartでChangeStateを呼ぶが、念のため）
+        // HideAllPanels(); // SetupInstanceですでに非表示になっているので不要
+    }
 
     /// <summary>
-    /// 全ての管理対象パネルを非表示にする（内部処理用）
+    /// プレハブを生成し、初期設定を行うヘルパー関数
+    /// </summary>
+    private TimelineState SetupInstance(TimelineState prefab, string name)
+    {
+        if (prefab == null) return null;
+
+        TimelineState instance = Instantiate(prefab, mainCanvasRoot);
+        instance.name = name;
+        
+        // RectTransformのズレを補正（画面いっぱいに広げるなど、必要に応じて）
+        RectTransform rt = instance.GetComponent<RectTransform>();
+        if (rt != null)
+        {
+            rt.anchoredPosition = Vector2.zero;
+            rt.localScale = Vector3.one;
+            // 必要ならanchorMin/Maxなども設定するが、プレハブ側で設定済みと仮定
+        }
+
+        instance.Exit(); // 最初は非表示
+        return instance;
+    }
+
+    /// <summary>
+    /// 全ての管理対象パネルを非表示(Exit)にする
     /// </summary>
     private void HideAllPanels()
     {
-        panelWaiting.SetActive(false);
-        panelScanning.SetActive(false);
-        panelScanComplete.SetActive(false);
-        panelMessage.SetActive(false);
-        panelEnd.SetActive(false);
+        if(instanceWaiting != null) instanceWaiting.Exit();
+        if(instanceScanning != null) instanceScanning.Exit();
+        if(instanceScanComplete != null) instanceScanComplete.Exit();
+        if(instanceMessage != null) instanceMessage.Exit();
+        if(instanceEnd != null) instanceEnd.Exit();
     }
 
     // --- ここから下は、他のスクリプトから呼び出して使用する ---
@@ -45,7 +112,7 @@ public class PanelController : MonoBehaviour
     public void ShowWaitingPanel()
     {
         HideAllPanels();
-        panelWaiting.SetActive(true);
+        if (instanceWaiting != null) instanceWaiting.Enter();
     }
 
     /// <summary>
@@ -54,7 +121,7 @@ public class PanelController : MonoBehaviour
     public void ShowScanningPanel()
     {
         HideAllPanels();
-        panelScanning.SetActive(true);
+        if (instanceScanning != null) instanceScanning.Enter();
     }
 
     /// <summary>
@@ -70,7 +137,7 @@ public class PanelController : MonoBehaviour
             return false; // スキップ
         }
 
-        panelScanComplete.SetActive(true);
+        if (instanceScanComplete != null) instanceScanComplete.Enter();
         return true; // 表示
     }
 
@@ -80,7 +147,7 @@ public class PanelController : MonoBehaviour
     public void ShowMessagePanel()
     {
         HideAllPanels();
-        panelMessage.SetActive(true);
+        if (instanceMessage != null) instanceMessage.Enter();
     }
 
     /// <summary>
@@ -96,7 +163,7 @@ public class PanelController : MonoBehaviour
             return false; // スキップ
         }
 
-        panelEnd.SetActive(true);
+        if (instanceEnd != null) instanceEnd.Enter();
         return true; // 表示
     }
 }

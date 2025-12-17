@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4989f353917a04b9fae338e58e11544c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileManager: {fileID: 0}
-  windowManager: {fileID: 0}
+  fileManager: {fileID: 102255837936510262}
+  windowManager: {fileID: 1020871262247423521}
 --- !u!114 &102255837936510262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -75,6 +75,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   messageWindowPrefab: {fileID: 4758279606954866859, guid: 37b5c6c6401d74923ab61f0de481cbef, type: 3}
   contentParent: {fileID: 0}
-  maxLines: 50
-  replaceInterval: 0.5
+  maxLines: 20
+  minLines: 0
+  displayDuration: 10
   margin: {x: 50, y: 50}

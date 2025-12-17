@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1697339202003318716}
   - component: {fileID: 6518772589984939044}
   - component: {fileID: 14430246232687588}
+  - component: {fileID: 4446898916288343253}
   m_Layer: 5
   m_Name: WindowsParent
   m_TagString: Untagged
@@ -55,6 +56,7 @@ MonoBehaviour:
   amplitude: 10
   speed: 1
   randomOffset: 1
+  fadeDuration: 1
 --- !u!222 &6518772589984939044
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -93,6 +95,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &4446898916288343253
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4758279606954866859}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5907982094678867504
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,8 +174,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u30E1\u30C3\u30BB\u30FC\u30B8"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: b380a66cde32fd24186d774c08fb47b5, type: 2}
-  m_sharedMaterial: {fileID: 3556946778851852066, guid: b380a66cde32fd24186d774c08fb47b5, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5644fed7b84ce406d98075f686e57ec6, type: 2}
+  m_sharedMaterial: {fileID: 1482614757590055155, guid: 5644fed7b84ce406d98075f686e57ec6, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

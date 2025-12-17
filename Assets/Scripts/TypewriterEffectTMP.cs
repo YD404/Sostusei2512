@@ -35,6 +35,10 @@ public class TypewriterEffectTMP : MonoBehaviour
 
         // ★重要: このメソッドが呼ばれた瞬間のテキストを全文として取得
         fullText = tmpText.text;
+        Debug.Log($"[TypewriterEffect] StartDisplay: TextLength={fullText.Length}, Text='{fullText}'");
+
+        // 表示を確実に更新
+        tmpText.ForceMeshUpdate();
 
         // 表示をリセット
         tmpText.maxVisibleCharacters = 0;

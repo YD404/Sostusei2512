@@ -9,7 +9,7 @@ import prompts
 logger = logging.getLogger(__name__)
 
 class GeminiClient:
-    def __init__(self, model_name="gemini-flash-latest"):
+    def __init__(self, model_name="gemini-2.5-flash-lite"):
         load_dotenv()
         self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
@@ -19,52 +19,42 @@ class GeminiClient:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(model_name)
         self.model_name = model_name
+        logger.info(f"GeminiClient initialized with model: {self.model_name}")
 
-    def generate_dialogue(self, analysis_data: dict, personality_prompt: str, tone_instruction: str, trigger: str) -> str:
+    def generate_dialogue(self, item_name: str, context_str: str, topic: str, obsession_instruction: str = None) -> str:
         """
-        Generates character dialogue based on context provided by external analysis.
-        Returns the spoken text string.
+        Generates character dialogue based on the new textual prompt format.
         """
-        if not analysis_data:
-            return "..."
         
-        # Build the structured prompt payload
-        prompt_payload = {
-            "role_definition": personality_prompt,
-            "context": {
-                "visual_description": analysis_data.get('description', 'Unknown object'),
-                "item_condition": analysis_data.get('item_condition', 'Unknown condition'),
-                "tone_instruction": tone_instruction
-            },
-            "psychological_trigger": trigger,
-            "system_instructions": prompts.DIALOGUE_SYSTEM_INSTRUCTIONS,
-            "required_output_format": prompts.DIALOGUE_OUTPUT_SCHEMA
-        }
+        # Build the structured prompt
+        full_prompt = (
+            f"Role: Personify the object '{item_name}'.\n"
+            f"{context_str}\n"
+            f"Topic: {topic}\n\n"
+            f"{prompts.CORE_LOGIC}\n"
+            f"{obsession_instruction if obsession_instruction else ''}\n"
+            f"{prompts.PERSONA_LOGIC}\n"
+            f"{prompts.GEMINI_TASK}\n"
+        )
         
-        # Convert to JSON string for the model
-        prompt_text = json.dumps(prompt_payload, ensure_ascii=False, indent=2)
-        
-        logger.info("Generating dialogue (Gemini Legacy JSON)...")
-        # logger.info(f"Prompt Payload: {prompt_text}") # Debug if needed
+        logger.info(f"Generating dialogue for: {item_name} (Topic: {topic})")
+        logger.info(f"[[GEMINI PROMPT]] Full Prompt:\n{full_prompt}")
 
         try:
             response = self.model.generate_content(
-                prompt_text,
+                full_prompt,
                 generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.8
+                    temperature=0.9 # Slightly higher for creativity
                 )
             )
             
-            data = json.loads(response.text)
+            text = response.text.strip()
+            # Simple cleanup if the model outputs markdown code blocks
+            if text.startswith("```"):
+                text = text.replace("```json", "").replace("```", "").strip()
             
-            # Extract dialogue logic
-            if "dialogue" in data:
-                return data["dialogue"]
-            else:
-                logger.warning("No 'dialogue' key in response.")
-                return "..."
+            return text
 
         except Exception as e:
             logger.error(f"Dialogue Generation Failed: {e}")
-            return "..."
+            return f"...... by {item_name}"

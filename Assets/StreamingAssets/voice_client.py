@@ -51,13 +51,25 @@ class VoiceClient:
         
         logger.info("TTS Step 2: Synthesizing...")
         try:
-            response = requests.post(
-                f"{self.api_server}/v1/synthesis",
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(query),
-                timeout=20
-            )
-            response.raise_for_status()
+            # Retry logic for synthesis (handling intermittent 500 errors)
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(
+                        f"{self.api_server}/v1/synthesis",
+                        headers={"Content-Type": "application/json"},
+                        data=json.dumps(query),
+                        timeout=30  # Increased timeout slightly
+                    )
+                    response.raise_for_status()
+                    break # Success
+                except requests.exceptions.RequestException as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"TTS Step 2 Failed (Attempt {attempt+1}/{max_retries}). Retrying in 1s... Error: {e}")
+                        import time
+                        time.sleep(1)
+                    else:
+                        raise e # Re-raise on last failure
             logger.info(f"Success. Size: {len(response.content)} bytes")
             return response.content
         except Exception as e:

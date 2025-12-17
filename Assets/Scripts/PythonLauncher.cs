@@ -137,6 +137,11 @@ public class PythonLauncher : MonoBehaviour, IDisposable
     {
         KillProcess();
     }
+
+    void OnDestroy()
+    {
+        KillProcess();
+    }
     public void Dispose()
     {
         KillProcess();

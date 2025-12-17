@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 public class MessageVoicePlayer : MonoBehaviour
 {
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private FlowManager flowManager; // ★追加
     [SerializeField] private string fileExtension = "*.wav"; // 必要に応じて .mp3 等に変更
 
     private FileSystemWatcher watcher;
@@ -90,6 +91,13 @@ public class MessageVoicePlayer : MonoBehaviour
                 clip.name = Path.GetFileName(path);
 
                 audioSource.clip = clip;
+
+                // ★追加: FlowManagerに時間を通知 (clip.length)
+                if (flowManager != null)
+                {
+                    flowManager.SetMessageDuration(clip.length);
+                }
+
                 audioSource.Play();
 
                 // 再生終了まで待機

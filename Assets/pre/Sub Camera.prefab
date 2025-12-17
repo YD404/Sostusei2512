@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4786037910677039978}
   - component: {fileID: 5389881814904024631}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sub Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 1, g: 1, b: 1, a: 0}
+  m_BackGroundColor: {r: 0.9150943, g: 0.9150943, b: 0.9150943, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -71,7 +71,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 128
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 1

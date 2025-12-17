@@ -10,8 +10,13 @@ public class FlowManager : MonoBehaviour
     [SerializeField] private PythonLauncher pythonLauncher;
     [SerializeField] private PythonMessageTMP pythonMessageDisplay;
 
+    [Header("Sub Display (Optional)")]
+    [Tooltip("サブディスプレイ用コントローラー。未設定でも動作します。")]
+    [SerializeField] private SubPanelController subPanelController;
+
     // 各状態の固定表示時間（秒）
     private const float STATE_DURATION = 10.0f;
+    private float pendingMessageDuration = -1.0f; // 音声からリクエストされた時間（未適用なら正の値）
 
     private enum FlowState
     {
@@ -24,6 +29,10 @@ public class FlowManager : MonoBehaviour
 
     private FlowState currentState;
 
+    // アーカイブ用: 現在のメッセージとクレジットを保持
+    private string currentMessage = "";
+    private string currentCredit = "";
+
     void Start()
     {
         if (pythonLauncher == null)
@@ -32,7 +41,53 @@ public class FlowManager : MonoBehaviour
             return;
         }
 
+        // ★追加: pythonMessageDisplay が未設定の場合、PanelController から取得
+        if (pythonMessageDisplay == null && panelController != null)
+        {
+            // PanelController の Start が先に呼ばれている必要があるため、
+            // 1フレーム待ってから取得を試みる
+            StartCoroutine(TryGetMessageDisplayDelayed());
+        }
+
         ChangeState(FlowState.Waiting);
+    }
+
+    private System.Collections.IEnumerator TryGetMessageDisplayDelayed()
+    {
+        yield return null; // 1フレーム待機
+        
+        if (pythonMessageDisplay == null && panelController != null)
+        {
+            pythonMessageDisplay = panelController.MessageDisplay;
+            if (pythonMessageDisplay != null)
+            {
+                Debug.Log("[FlowManager] PanelController から PythonMessageTMP を自動取得しました。");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 外部（MessageVoicePlayerなど）からMessage状態の表示時間を指定する
+    /// 音声長さ + 2.0秒 とする
+    /// </summary>
+    /// <param name="clipLength">音声クリップの秒数</param>
+    public void SetMessageDuration(float clipLength)
+    {
+        float newDuration = clipLength + 2.0f;
+        Debug.Log($"[FlowManager] MessageDuration 更新リクエスト: 音声{clipLength}s -> 表示{newDuration}s");
+
+        if (currentState == FlowState.Message)
+        {
+            // すでにMessage中なら、タイマーをリセットして時間を再設定
+            CancelInvoke(nameof(OnMessageFinished));
+            Invoke(nameof(OnMessageFinished), newDuration);
+            Debug.Log($"[FlowManager] 現在のMessage状態の残り時間を {newDuration}s に延長しました。");
+        }
+        else
+        {
+            // まだMessageになっていないなら、次回の遷移で使うように保存
+            pendingMessageDuration = newDuration;
+        }
     }
 
     private void ChangeState(FlowState newState)
@@ -41,18 +96,28 @@ public class FlowManager : MonoBehaviour
         currentState = newState;
         Debug.Log($"--- FlowState 変更: {currentState} ---");
 
+        // Scanning開始時に古いpendingDurationをクリア（念のため）
+        if (currentState == FlowState.Scanning)
+        {
+            pendingMessageDuration = -1.0f;
+        }
+
         switch (currentState)
         {
             case FlowState.Waiting:
                 panelController.ShowWaitingPanel();
+                // サブディスプレイ: ステータスをクリア
+                if (subPanelController != null) subPanelController.SetStatus("");
                 break;
 
             case FlowState.Scanning:
                 panelController.ShowScanningPanel();
+                // ステータスはPythonログで更新される
                 break;
 
             case FlowState.ScanComplete:
                 bool displayed = panelController.ShowScanCompletePanel();
+                // ステータスはPythonログで更新される
                 // パネル表示の有無にかかわらず次へ進むロジック
                 float delay = displayed ? STATE_DURATION : 0.1f;
                 Invoke(nameof(OnCompleteFinished), delay);
@@ -60,16 +125,38 @@ public class FlowManager : MonoBehaviour
 
             case FlowState.Message:
                 panelController.ShowMessagePanel();
+                // ステータスをクリア（ログのみ表示）
+                if (subPanelController != null) subPanelController.SetStatus("");
                 if (pythonMessageDisplay != null)
                 {
                     pythonMessageDisplay.StartTypewriter();
                 }
-                Invoke(nameof(OnMessageFinished), STATE_DURATION);
+
+                // 時間決定ロジック
+                float duration = STATE_DURATION; // デフォルト 10s
+                if (pendingMessageDuration > 0)
+                {
+                    duration = pendingMessageDuration;
+                    pendingMessageDuration = -1.0f; // 消費
+                    Debug.Log($"[FlowManager] 音声に基づく指定時間({duration}s)を適用します。");
+                }
+                
+                Invoke(nameof(OnMessageFinished), duration);
                 break;
 
             case FlowState.End:
+                // ★ Handover Phase: サブディスプレイにログを追加
+                if (subPanelController != null && !string.IsNullOrEmpty(currentMessage))
+                {
+                    subPanelController.AddLogEntry(currentMessage, currentCredit);
+                    subPanelController.SetStatus("");  // ステータスをクリア
+                    // 送信後にクリア
+                    currentMessage = "";
+                    currentCredit = "";
+                }
+
                 bool endDisplayed = panelController.ShowEndPanel();
-                float endDelay = endDisplayed ? STATE_DURATION : 0.1f;
+                float endDelay = endDisplayed ? 5.0f : 0.1f;
                 Invoke(nameof(OnEndFinished), endDelay);
                 break;
         }
@@ -81,14 +168,16 @@ public class FlowManager : MonoBehaviour
     {
         Debug.Log($"[Python受信] {line}");
 
-        // 1. 開始タグ [[STATE_START]]
-        if (line.Contains("[[STATE_START]]"))
+        // 1. 開始タグ or ログ検知
+        if (line.Contains("[[STATE_START]]") || line.Contains("Analyzing image (Local Ollama):"))
         {
             if (currentState == FlowState.Waiting)
             {
-                Debug.Log("タグ検知: 開始 -> Scanningへ");
+                Debug.Log($"検知: 開始({line}) -> Scanningへ");
                 ChangeState(FlowState.Scanning);
             }
+            // サブディスプレイにPythonログを転送
+            if (subPanelController != null) subPanelController.SetStatus(line);
         }
         // ★追加部分: クレジットタグ [[CREDIT]]
         // メッセージよりも先に来るので、ここで受け取ってセットしておく
@@ -97,6 +186,10 @@ public class FlowManager : MonoBehaviour
             // タグを除去して、中身（例: "CV: ディアちゃん"）を取り出す
             string creditBody = line.Replace("[[CREDIT]]", "").Trim();
             Debug.Log($"[FlowManager] クレジット受信確認: {creditBody}");
+            
+            // アーカイブ用に保持
+            currentCredit = creditBody;
+            
             if (pythonMessageDisplay != null)
             {
                 // PythonMessageTMP に新しく作った SetCredit関数 を呼ぶ
@@ -109,19 +202,30 @@ public class FlowManager : MonoBehaviour
             // タグを除去して、本文だけをUIに渡す
             string messageBody = line.Replace("[[MESSAGE]]", "").Trim();
 
+            // アーカイブ用に保持
+            currentMessage = messageBody;
+
             if (pythonMessageDisplay != null)
             {
                 pythonMessageDisplay.ReceiveMessage(messageBody);
             }
         }
-        // 3. 完了タグ [[STATE_COMPLETE]]
-        else if (line.Contains("[[STATE_COMPLETE]]"))
+        // 3. 完了タグ or ログ検知
+        else if (line.Contains("[[STATE_COMPLETE]]") || line.Contains("Generating dialogue (Gemini Legacy JSON)"))
         {
+            // サブディスプレイにPythonログを転送
+            if (subPanelController != null) subPanelController.SetStatus(line);
+            
             if (currentState == FlowState.Scanning)
             {
-                Debug.Log("タグ検知: 完了 -> ScanCompleteへ");
+                Debug.Log($"検知: 完了({line}) -> ScanCompleteへ");
                 ChangeState(FlowState.ScanComplete);
             }
+        }
+        // 4. その他のPythonログもサブディスプレイに転送（Scanning/ScanComplete中のみ）
+        else if (currentState == FlowState.Scanning || currentState == FlowState.ScanComplete)
+        {
+            if (subPanelController != null) subPanelController.SetStatus(line);
         }
     }
 

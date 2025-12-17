@@ -64,4 +64,17 @@ public class MessageWindowAnimation : MonoBehaviour
         canvasGroup.alpha = end;
         onComplete?.Invoke();
     }
+
+    public void SetLifetime(float duration)
+    {
+        StartCoroutine(LifetimeRoutine(duration));
+    }
+
+    private IEnumerator LifetimeRoutine(float duration)
+    {
+        // ライフタイム待機
+        yield return new WaitForSeconds(duration);
+        // 時間が来たら消える
+        Dismiss();
+    }
 }

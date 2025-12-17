@@ -7,7 +7,6 @@ public class captureTrigger : MonoBehaviour
     private WebCamCapture captureModule;
 
     public KeyCode captureKey = KeyCode.Space; // キャプチャに使用するキー
-    public float captureDelay = 5f; // 遅延時間（秒）
 
     // 既に遅延実行が要求されているか（連打防止用）
     private bool isWaitingForCapture = false;
@@ -19,31 +18,22 @@ public class captureTrigger : MonoBehaviour
         {
             if (captureModule != null)
             {
-                // コルーチンを開始して遅延処理を行う
-                StartCoroutine(DelayedCapture());
+                // 即座にキャプチャ実行
+                // 連打防止のため簡易的にフラグ制御をするなら、一瞬だけ待つか、
+                // あるいはPython側の処理が終わるまで入力を受け付けない制御が必要かもしれないが、
+                // ここでは「即座に」という要望通り遅延なしで実行する。
+                // ただし、連続実行を防ぐならコルーチンで1フレーム待つ程度にするか、
+                // そのまま実行してすぐにフラグを戻す。
+                
+                // 今回はシンプルに即時実行
+                Debug.Log("キャプチャを実行します...");
+                captureModule.CaptureAndSave();
+                Debug.Log("キャプチャを実行しました。");
             }
             else
             {
                 Debug.LogWarning("captureModule が設定されていません。");
             }
         }
-    }
-
-    // 遅延後にキャプチャを実行するコルーチン
-    private IEnumerator DelayedCapture()
-    {
-        // 待機状態にする（連打を無視するため）
-        isWaitingForCapture = true;
-        Debug.Log($"{captureDelay}秒後にキャプチャを実行します...");
-
-        // 指定された秒数だけ待機
-        yield return new WaitForSeconds(captureDelay);
-
-        // キャプチャメソッドを呼び出す
-        captureModule.CaptureAndSave();
-        Debug.Log("キャプチャを実行しました。");
-
-        // 待機状態を解除（次のキー入力に備える）
-        isWaitingForCapture = false;
     }
 }

@@ -8,8 +8,9 @@ from watchdog.events import FileSystemEventHandler
 
 # Import Clients
 from ollama_client import OllamaClient
-from gemini_client import GeminiClient
+from deepseek_client import DeepSeekClient # CHANGED from GeminiClient
 from voice_client import VoiceClient
+import item_obsessions
 
 # --- Configuration & Constants ---
 WATCHED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
@@ -46,43 +47,70 @@ PERSONALITY_PROMPTS = config_data.get("PERSONALITY_PROMPTS", {})
 PSYCHOLOGICAL_TRIGGERS = config_data.get("PSYCHOLOGICAL_TRIGGERS", [])
 
 # --- Initialize Clients ---
+# ------------------------------------------------------------------
+# 2. Initialize Clients
+# ------------------------------------------------------------------
 try:
-    ollama_client = OllamaClient(model_name='qwen2.5vl:7b')
-    gemini_client = GeminiClient(model_name='gemini-flash-latest')
+    ollama_client = OllamaClient()
+    deepseek_client = DeepSeekClient() # CHANGED
     voice_client = VoiceClient()
-    logger.info("Clients initialized successfully (Hybrid Mode).")
+    logger.info("Clients initialized successfully (Hybrid Mode: Ollama + DeepSeek).")
 except Exception as e:
     logger.critical(f"Failed to initialize clients: {e}")
     exit(1)
 
 # --- Logic Helper Functions ---
-def determine_tone(score):
-    try:
-        score = int(score)
-    except:
-        score = 3
-        
-    if score <= 2:
-        return "Tone: Fresh, Polite, Curious (New Item). Act as if you just met the world."
-    elif score >= 4:
-        return "Tone: Wise, Intimate, Nostalgic (Old Item). Act as if you have known the user for years."
-    else:
-        return "Tone: Friendly, Casual (Used Item). Act as a reliable partner."
+# --- Logic Helper Functions ---
+def determine_persona(analysis_data):
+    """
+    Determines persona based on the 5-step priority logic.
+    Returns (persona_id, role_name_jp)
+    """
+    state_str = analysis_data.get("state", "Normal").lower()
+    shape_str = analysis_data.get("shape", "Other").lower()
+    is_machine = analysis_data.get("is_machine", False)
+    
+    # 1. Old / Dirty -> Old Man (ご長寿)
+    if any(x in state_str for x in ["old", "dirty", "broken"]):
+        return "lifeline", "ご長寿" # Mapped to deepest male voice available (Lifeline usually has diverse voices or use specific UUID)
 
-def determine_personality_id(analysis_data):
-    pid = analysis_data.get("personality_id", "observer")
-    item_name = analysis_data.get("item_name", "Object")
-    item_lower = item_name.lower()
+    # 2. Sharp / Machine+Black -> Chuuni (中二病)
+    # Note: Color is not currently extracted by Ollama in the new prompt, assuming Shape/Machine is enough or add color check back if needed.
+    # For now, using Shape=Sharp OR Machine=True logic slightly loosely for Chuuni if not Old.
+    if "sharp" in shape_str:  
+        return "gatekeeper", "中二病" # Mapped to cool male voice
+
+    # 3. Machine -> Tsundere (ツンデレ)
+    if is_machine:
+        return "mask", "ツンデレ" # Mapped to sharp female
+
+    # 4. Round -> Yandere (ヤンデレ)
+    if "round" in shape_str:
+        return "sanctuary", "ヤンデレ" # Mapped to whisper/soft female
+
+    # 5. Default -> Gal (ギャル)
+    return "external_brain", "ギャル" # Mapped to energetic female
+
+def get_voice_uuid(persona_id):
+    """
+    Maps specific Persona IDs to specific preferred Voice UUIDs/Styles from config.
+    """
+    # This mapping attempts to pick the best voice from valid config categories
+    # "lifeline" (Old) -> 九州そら (Style 685839222 is deep? Actual check needed, defaulting to first valid)
+    # "gatekeeper" (Chuuni) -> 剣崎雌雄 (Male)
+    # "mask" (Tsundere) -> No.7 (Female)
+    # "sanctuary" (Yandere) -> 春日部つむぎ (Soft Female)
+    # "external_brain" (Gal) -> 虚音イフ (Female)
     
-    # Force override based on keywords
-    if any(x in item_lower for x in ['phone', 'smart', 'watch', 'tablet', 'screen']): pid = 'external_brain'
-    elif any(x in item_lower for x in ['bottle', 'water', 'drink', 'food', 'snack', 'candy', 'medicine']): pid = 'lifeline'
-    elif any(x in item_lower for x in ['wallet', 'key', 'card', 'money', 'coin', 'purse']): pid = 'gatekeeper'
-    elif any(x in item_lower for x in ['pen', 'pencil', 'note', 'book', 'laptop', 'camera']): pid = 'muse'
-    elif any(x in item_lower for x in ['earphone', 'headphone', 'plush', 'toy', 'tissue', 'handkerchief', 'cigarette']): pid = 'sanctuary'
-    elif any(x in item_lower for x in ['cosmetic', 'makeup', 'mirror', 'glass', 'ring', 'necklace', 'jewelry']): pid = 'mask'
-    
-    return pid
+    variants = VOICE_VARIANTS.get(persona_id, [])
+    if not variants:
+        # Fallback to any existant
+        all_keys = list(VOICE_VARIANTS.keys())
+        if all_keys: variants = VOICE_VARIANTS[all_keys[0]]
+        
+    if variants:
+        return random.choice(variants) # Random variation within the persona category
+    return None
 
 def process_image(image_path):
     if os.path.basename(image_path).startswith('.'):
@@ -96,34 +124,61 @@ def process_image(image_path):
         # 1. Image Analysis (OLLAMA - Local)
         # -----------------------------------
         analysis_data = ollama_client.analyze_image(image_path)
+        logger.info(f"[[OLLAMA ANALYSIS]] Data: {json.dumps(analysis_data, ensure_ascii=False)}")
         
-        if not analysis_data:
-            logger.warning("Analysis failed. Using default fallback.")
-            analysis_data = {"item_name": "Object", "description": "Unknown", "item_condition": "Unknown", "condition_score": 3, "personality_id": "observer"}
-        
-        # 2. Logic: Tone & Personality
+        # 2. Logic: Persona & Prompt Construction
         # ----------------------------
-        score = analysis_data.get("condition_score", 3)
-        tone_instruction = determine_tone(score)
+        persona_id, role_name = determine_persona(analysis_data)
         
-        pid = determine_personality_id(analysis_data)
-        
-        if pid not in VOICE_VARIANTS: pid = "observer"
-        voice_settings = random.choice(VOICE_VARIANTS[pid])
-        logger.info(f"[[CREDIT]] COERIOINK: {voice_settings['name']} (Role: {pid})")
+        # Construct Context Parts
+        item_name = analysis_data.get("item_name", "Object")
+        is_machine_str = str(analysis_data.get("is_machine", False))
+        shape_val = analysis_data.get("shape", "Unknown")
+        state_val = analysis_data.get("state", "Normal")
+        user_app = analysis_data.get("user_appearance", "None")
 
-        # 3. Text Generation (GEMINI - Cloud)
-        # -----------------------------------
-        trigger = random.choice(PSYCHOLOGICAL_TRIGGERS)
-        prompt_text = PERSONALITY_PROMPTS.get(pid, "")
+        # Get Obsession Instruction
+        obsession_instruction = item_obsessions.get_obsession_instruction(item_name)
         
-        speech_text = gemini_client.generate_dialogue(
-            analysis_data, 
-            prompt_text, 
-            tone_instruction, 
-            trigger
+        context_str = (
+            f"Context: Machine={is_machine_str}, Shape={shape_val}, State={state_val}.\n"
+            f"User Appearance: {user_app}"
         )
         
+        # Select Random Topic
+        import prompts 
+        topic = random.choice(prompts.TOPIC_LIST)
+        
+        # Voice Selection
+        voice_settings = get_voice_uuid(persona_id)
+        if voice_settings:
+            logger.info(f"[[CREDIT]] COERIOINK: {voice_settings['name']} (Role: {role_name})")
+        else:
+            logger.warning("[[CREDIT]] No voice settings found.")
+
+        # 3. Text Generation (DeepSeek - Cloud)
+        # -----------------------------------
+        full_text = deepseek_client.generate_dialogue(
+            item_name,
+            context_str,
+            topic,
+            obsession_instruction
+        )
+        
+        logger.info(f"[[DEEPSEEK RAW]] {full_text}")
+
+        # Parse Output "Dialogue by Role"
+        # Expected: "Some text... by RoleName"
+        import re
+        match = re.search(r'(.*)(?:\s+by\s+)(.*)', full_text, re.DOTALL)
+        
+        if match:
+            speech_text = match.group(1).strip()
+            # role_suffix = match.group(2).strip() # Unused but good for debug
+        else:
+            # Fallback if format is broken
+            speech_text = full_text.split('by')[0].strip()
+
         logger.info(f"[[MESSAGE]] {speech_text}")
 
         if len(speech_text) < 2:
@@ -132,11 +187,12 @@ def process_image(image_path):
 
         # 4. Audio Synthesis (COEIROINK - Local)
         # --------------------------------------
-        audio_data = voice_client.synthesis(
-            speech_text, 
-            voice_settings['uuid'], 
-            voice_settings['style']
-        )
+        if voice_settings:
+            audio_data = voice_client.synthesis(
+                speech_text, 
+                voice_settings['uuid'], 
+                voice_settings['style']
+            )
 
         if audio_data:
             base_name = os.path.splitext(filename)[0]
@@ -182,8 +238,8 @@ class ImageHandler(FileSystemEventHandler):
             process_image(event.src_path)
 
 if __name__ == "__main__":
-    print("--- Hybrid AI Object Voice System (v7.0: OllamaVision + GeminiText) ---")
-    logger.info(f"[[SYSTEM]] Monitoring: {CAPTURE_DIR}")
+    print("--- Hybrid AI Object Voice System (v8.0: OllamaVision + DeepSeekText) ---")
+    logger.info("--- Hybrid AI Object Voice System (v8.0: OllamaVision + DeepSeekText) ---")
     
     event_handler = ImageHandler()
     observer = Observer()

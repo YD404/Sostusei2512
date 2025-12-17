@@ -51,8 +51,14 @@ class OllamaClient:
             analysis_data = self.extract_json(content)
             
             if not analysis_data:
-                logger.warning("Local Analysis JSON parsing failed.")
-                return None
+                logger.warning("Local Analysis JSON parsing failed. Using default.")
+                return {
+                    "is_machine": False, 
+                    "shape": "Other", 
+                    "state": "Normal", 
+                    "item_name": "Unknown Object", 
+                    "user_appearance": "None"
+                }
                 
             return analysis_data
 
