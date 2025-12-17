@@ -8,8 +8,8 @@ using System.Text;
 public class PythonLauncher : MonoBehaviour, IDisposable
 {
     [Header("Dependencies")]
-    [Tooltip("結果を通知するFlowManager")]
-    [SerializeField] private FlowManager flowManager;
+    [Tooltip("メッセージを振り分けるRouter")]
+    [SerializeField] private PythonMessageRouter messageRouter;
 
     private Process pythonProcess;
     private string pythonExecutablePath = "/opt/homebrew/bin/python3.11";
@@ -74,15 +74,13 @@ public class PythonLauncher : MonoBehaviour, IDisposable
         catch (Exception e)
         {
             UnityEngine.Debug.LogError($"Pythonプロセスの起動に失敗: {e.Message}");
-            // 起動失敗時もFlowManagerに通知
-            if (flowManager != null)
+            // 起動失敗時もRouterに通知
+            if (messageRouter != null)
             {
-                flowManager.OnPythonError("起動失敗: " + e.Message);
+                messageRouter.OnPythonError("起動失敗: " + e.Message);
             }
         }
     }
-
-    // public void ExecuteScript() は Start() に統合されたため削除
 
     void Update()
     {
@@ -100,38 +98,21 @@ public class PythonLauncher : MonoBehaviour, IDisposable
 
             if (line != null)
             {
-                // FlowManagerが設定されていれば、受信データを渡す
-                if (flowManager != null)
+                // Routerが設定されていれば転送
+                if (messageRouter != null)
                 {
-                    flowManager.OnPythonMessageReceived(line);
+                    messageRouter.OnPythonOutput(line);
                 }
                 else
                 {
-                    // FlowManagerがない場合は、元のデバッグログを出す
-                    LogPythonOutput(line);
+                    // Routerがない場合はデバッグログ
+                    UnityEngine.Debug.Log("Python: " + line);
                 }
             }
         }
     }
 
-    // 元のデバッグログ処理（FlowManagerがない場合のフォールバック）
-    private void LogPythonOutput(string line)
-    {
-        if (line.Contains("処理中"))
-        {
-            UnityEngine.Debug.Log("「処理中」を受信しました。");
-            UnityEngine.Debug.Log(line);
-        }
-        else if (line.Contains("結果"))
-        {
-            UnityEngine.Debug.Log("「結果」を受信しました。");
-            UnityEngine.Debug.Log(line);
-        }
-        else
-        {
-            UnityEngine.Debug.Log("Python (Other): " + line);
-        }
-    }
+
 
     void OnApplicationQuit()
     {

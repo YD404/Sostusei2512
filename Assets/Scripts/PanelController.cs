@@ -39,7 +39,7 @@ public class PanelController : MonoBehaviour
     [Tooltip("End Panelの表示をスキップするか")]
     [SerializeField] private bool skipEnd = false;
 
-    private void Start()
+    private void Awake()
     {
         // プレハブからインスタンスを生成し、初期状態は非表示(Exit)にしておく
         if (mainCanvasRoot == null)

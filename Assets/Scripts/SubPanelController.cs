@@ -118,13 +118,19 @@ public class SubPanelController : MonoBehaviour
     /// <param name="status">表示するログ文字列（空文字でクリア）</param>
     public void SetStatus(string status)
     {
-        // 空文字の場合はクリア
+        // 空文字の場合はクリア -> アーカイブ再表示
         if (string.IsNullOrEmpty(status))
         {
             if (logBufferDisplay != null) logBufferDisplay.ClearLogs();
             if (statusText != null) statusText.text = "";
+            
+            // アーカイブを表示
+            if (contentContainer != null) contentContainer.gameObject.SetActive(true);
             return;
         }
+
+        // ステータス表示中 -> アーカイブ非表示（重なり防止）
+        if (contentContainer != null) contentContainer.gameObject.SetActive(false);
 
         // LogBufferDisplayが設定されている場合はそちらを優先
         if (logBufferDisplay != null)
