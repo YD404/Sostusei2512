@@ -6,6 +6,9 @@ public class captureTrigger : MonoBehaviour
     [SerializeField]
     private WebCamCapture captureModule;
 
+    [SerializeField]
+    private FlowManager flowManager; // ★追加: キャプチャ時にScanningに切り替え
+
     public KeyCode captureKey = KeyCode.Space; // キャプチャに使用するキー
 
     // 既に遅延実行が要求されているか（連打防止用）
@@ -29,6 +32,12 @@ public class captureTrigger : MonoBehaviour
                 Debug.Log("キャプチャを実行します...");
                 captureModule.CaptureAndSave();
                 Debug.Log("キャプチャを実行しました。");
+
+                // ★追加: キャプチャ実行と同時にScanningに切り替え
+                if (flowManager != null)
+                {
+                    flowManager.NotifyScanStart();
+                }
             }
             else
             {

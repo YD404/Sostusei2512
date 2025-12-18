@@ -56,7 +56,15 @@ Persona Logic (Apply the first matching rule):
 
 GEMINI_TASK = """
 Task: Write a short, character-driven monologue (max 60 Japanese chars) reacting to the user.
-Format: [Tweet] by [Role]{item_name}
-Example: 毎日ペタペタ触りすぎ！私の事好きなのはわかったから！！ by ツンデレスマホ
-Example: レンズに指紋がついてる...この指紋、誰？ by ヤンデレメガネ
+**OUTPUT FORMAT (STRICTLY FOLLOW):**
+Output ONLY ONE LINE in this exact format: YOUR_DIALOGUE by ROLE_NAME
+- YOUR_DIALOGUE: The actual Japanese dialogue (NOT a placeholder like "[Tweet]")
+- ROLE_NAME: The role name (e.g., ツンデレスマホ, ヤンデレメガネ)
+
+CORRECT Examples:
+毎日ペタペタ触りすぎ！私の事好きなのはわかったから！！ by ツンデレスマホ
+レンズに指紋がついてる...この指紋、誰？ by ヤンデレメガネ
+
+WRONG (DO NOT DO THIS):
+[Tweet] by ギャル  ← NEVER output "[Tweet]" literally!
 """

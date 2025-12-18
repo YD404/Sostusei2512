@@ -270,15 +270,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2093375072354151902, guid: 71c0b5698ee4042b1a13ad008fced2e9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.8179216
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2093375072354151902, guid: 71c0b5698ee4042b1a13ad008fced2e9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.517694
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2093375072354151902, guid: 71c0b5698ee4042b1a13ad008fced2e9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.54473
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2093375072354151902, guid: 71c0b5698ee4042b1a13ad008fced2e9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -547,7 +547,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &884642839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -790,7 +790,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1116637843}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -897,7 +897,7 @@ Transform:
   m_GameObject: {fileID: 1232575758}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.43789762, y: -0.13991201, z: -0.01835133}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1244,11 +1244,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48162628e9e824f1f8b0e105a404810d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  contentContainer: {fileID: 0}
-  logItemPrefab: {fileID: 0}
-  fallbackText: {fileID: 610922169}
-  logBufferDisplay: {fileID: 1401771893}
-  statusText: {fileID: 884642839}
+  unifiedDisplayTMP: {fileID: 1401771891}
+  logItemPrefab: {fileID: 9079082675339743758, guid: 75ef68f6e76504d85818c745721eced7, type: 3}
+  prefabContainer: {fileID: 8900329534670926698}
 --- !u!4 &1658534347
 Transform:
   m_ObjectHideFlags: 0
@@ -1258,7 +1256,7 @@ Transform:
   m_GameObject: {fileID: 1658534345}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.4512005, y: 0.28722307, z: -2.6063316}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1299,6 +1297,59 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1767820615
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1767820616}
+  - component: {fileID: 1767820617}
+  m_Layer: 7
+  m_Name: MessageHistoryDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1767820616
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1767820615}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 90}
+  m_LocalScale: {x: 0.009259259, y: 0.009259259, z: 0.009259259}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1767820617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1767820615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50a76fedbaf4e4461bf1aff0d40b183c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  historyText: {fileID: 610922169}
+  maxLines: 28
+  typingSpeed: 0.01
+  nextLineInterval: 0.1
+  fileName: Message.txt
 --- !u!1 &1799007940
 GameObject:
   m_ObjectHideFlags: 0
@@ -1338,7 +1389,7 @@ Transform:
   m_GameObject: {fileID: 1799007940}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.43789762, y: -0.13991201, z: -0.01835133}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1376,6 +1427,7 @@ MonoBehaviour:
   panelController: {fileID: 1116637844}
   pythonMessageDisplay: {fileID: 0}
   subPanelController: {fileID: 1658534346}
+  messageHistoryDisplay: {fileID: 1767820617}
 --- !u!4 &1840324597
 Transform:
   m_ObjectHideFlags: 0
@@ -1384,7 +1436,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1840324595}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1699,13 +1751,14 @@ SceneRoots:
   - {fileID: 30706755}
   - {fileID: 4289483918548393628}
   - {fileID: 8900329534670926698}
+  - {fileID: 1365348632}
   - {fileID: 900087961}
   - {fileID: 1228006639}
   - {fileID: 1799007942}
   - {fileID: 1232575760}
-  - {fileID: 1365348632}
   - {fileID: 344640800}
-  - {fileID: 1116637845}
   - {fileID: 1840324597}
-  - {fileID: 1658534347}
   - {fileID: 923159058}
+  - {fileID: 1116637845}
+  - {fileID: 1658534347}
+  - {fileID: 1767820616}

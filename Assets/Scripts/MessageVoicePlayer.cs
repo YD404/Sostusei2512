@@ -98,6 +98,17 @@ public class MessageVoicePlayer : MonoBehaviour
                     flowManager.SetMessageDuration(clip.length);
                 }
 
+                // ★修正: FlowStateがMessageになるまで待機してから再生
+                if (flowManager != null)
+                {
+                    Debug.Log("[MessageVoicePlayer] Message状態になるまで待機中...");
+                    while (flowManager.CurrentState != FlowManager.FlowState.Message)
+                    {
+                        yield return null;
+                    }
+                    Debug.Log("[MessageVoicePlayer] Message状態検出、再生開始");
+                }
+
                 audioSource.Play();
 
                 // 再生終了まで待機

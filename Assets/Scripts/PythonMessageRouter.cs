@@ -120,9 +120,18 @@ public class PythonMessageRouter : MonoBehaviour
         {
             HandleMessage(line);
         }
-        else if (line.Contains("[[STATE_COMPLETE]]") || line.Contains("Generating dialogue (Gemini Legacy JSON)"))
+        else if (IsDeepSeekApiResponse(line))
         {
-            HandleScanComplete(line);
+            // DeepSeek API レスポンスを検出
+            if (line.Contains("200 OK"))
+            {
+                HandleScanComplete(line);
+            }
+            else
+            {
+                // 4xx / 5xx エラーの場合
+                HandleApiError(line);
+            }
         }
         else
         {
@@ -158,6 +167,10 @@ public class PythonMessageRouter : MonoBehaviour
     {
         // [[INFO]] タグも除去する
         string creditBody = line.Replace("[[CREDIT]]", "").Replace("[[INFO]]", "").Trim();
+        
+        // (Role: ...) 部分を除去
+        creditBody = System.Text.RegularExpressions.Regex.Replace(creditBody, @"\s*\(Role:\s*[^)]*\)", "").Trim();
+        
         Debug.Log($"[Router] クレジット受信: {creditBody}");
 
         currentCredit = creditBody;
@@ -210,6 +223,28 @@ public class PythonMessageRouter : MonoBehaviour
 
         // ファイル書き込み
         MessageFileWriter.Write(messageBody, currentCredit);
+    }
+
+    /// <summary>
+    /// DeepSeek APIへのHTTPレスポンスかどうかを判定
+    /// </summary>
+    private bool IsDeepSeekApiResponse(string line)
+    {
+        return line.Contains("https://api.deepseek.com/chat/completions") && line.Contains("HTTP");
+    }
+
+    /// <summary>
+    /// API通信エラー時の処理（4xx/5xxエラー）
+    /// </summary>
+    private void HandleApiError(string line)
+    {
+        Debug.LogWarning($"[Router] DeepSeek APIエラー検出: {line}");
+        
+        // サブディスプレイにエラー表示
+        if (subPanelController != null) subPanelController.SetStatus($"[API Error] {line}");
+        
+        // FlowManagerにエラーを通知（Waiting状態に戻る）
+        if (flowManager != null) flowManager.OnPythonError($"DeepSeek API Error: {line}");
     }
 
     private void HandleScanComplete(string line)
