@@ -33,6 +33,7 @@ public class PythonMessageRouter : MonoBehaviour
     // 現在のメッセージとクレジットを保持
     private string currentMessage = "";
     private string currentCredit = "";
+    private string currentCharacter = "";
 
     // RuneSpawner取得前に受信したメッセージをバッファ
     private string pendingRuneMessage = null;
@@ -112,6 +113,10 @@ public class PythonMessageRouter : MonoBehaviour
         {
             HandleScanStart(line);
         }
+        else if (line.Contains("[[CHARACTER]]"))
+        {
+            HandleCharacter(line);
+        }
         else if (line.Contains("[[CREDIT]]"))
         {
             HandleCredit(line);
@@ -163,6 +168,29 @@ public class PythonMessageRouter : MonoBehaviour
         if (flowManager != null) flowManager.NotifyScanStart();
     }
 
+    private void HandleCharacter(string line)
+    {
+        string charBody = line.Replace("[[CHARACTER]]", "").Replace("[[INFO]]", "").Trim();
+        Debug.Log($"[Router] キャラ名受信: {charBody}");
+        currentCharacter = charBody;
+        
+        // [[CHARACTER]]は[[CREDIT]]より後に来るため、ここでクレジットを再構築
+        if (!string.IsNullOrEmpty(currentCredit) && !string.IsNullOrEmpty(currentCharacter))
+        {
+            // 既存のクレジットから「by ...｜」部分を除去してから再構築
+            string baseCredit = System.Text.RegularExpressions.Regex.Replace(currentCredit, @"^by\s+[^｜]+｜", "").Trim();
+            if (string.IsNullOrEmpty(baseCredit)) baseCredit = currentCredit;
+            
+            currentCredit = $"by {currentCharacter}｜{baseCredit}";
+            Debug.Log($"[Router] クレジット再構築: {currentCredit}");
+            
+            if (pythonMessageDisplay != null)
+            {
+                pythonMessageDisplay.SetCredit(currentCredit);
+            }
+        }
+    }
+
     private void HandleCredit(string line)
     {
         // [[INFO]] タグも除去する
@@ -171,13 +199,21 @@ public class PythonMessageRouter : MonoBehaviour
         // (Role: ...) 部分を除去
         creditBody = System.Text.RegularExpressions.Regex.Replace(creditBody, @"\s*\(Role:\s*[^)]*\)", "").Trim();
         
-        Debug.Log($"[Router] クレジット受信: {creditBody}");
-
-        currentCredit = creditBody;
+        // キャラ名がある場合は結合
+        if (!string.IsNullOrEmpty(currentCharacter))
+        {
+            currentCredit = $"by {currentCharacter}｜{creditBody}";
+        }
+        else
+        {
+            currentCredit = creditBody;
+        }
+        
+        Debug.Log($"[Router] クレジット受信: {currentCredit}");
 
         if (pythonMessageDisplay != null)
         {
-            pythonMessageDisplay.SetCredit(creditBody);
+            pythonMessageDisplay.SetCredit(currentCredit);
         }
     }
 

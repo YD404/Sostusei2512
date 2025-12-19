@@ -55,12 +55,12 @@ void loop() {
       }
 
       // 3秒経過 & 未実行なら発火
-      if (elapsedTime >= 3000 && !actionDone) {
+      if (elapsedTime >= 1500 && !actionDone) {
         Keyboard.press(' ');
         delay(50);
         Keyboard.release(' ');
         
-        Serial.println(">> 3秒到達: SPACE送信 <<");
+        Serial.println(">> 1.5秒到達: SPACE送信 <<");
         actionDone = true; 
       }
     }
@@ -69,12 +69,12 @@ void loop() {
     // 検知モード中に手が離れたら終了＆クールダウン開始
     if (isDetecting && currentSensorState == HIGH) {
       isDetecting = false;
-      cooldownEndTime = currentTime + 3000; // 3秒のクールダウンセット
+      cooldownEndTime = currentTime + 1500; // 3秒のクールダウンセット
       
       if (actionDone) {
-        Serial.println("離れました。クールダウン開始(3秒)...");
+        Serial.println("離れました。クールダウン開始(1.5秒)...");
       } else {
-        Serial.println("キャンセル。クールダウン開始(3秒)...");
+        Serial.println("キャンセル。クールダウン開始(1.5秒)...");
       }
     }
   }

@@ -8,18 +8,14 @@ using System.Collections.Generic;
 /// <summary>
 /// Message.txt の内容を表示するスクリプト。
 /// Waiting 状態でランダムなメッセージを無限にタイピング表示する。
+/// TypewriterEffectTMPを使用してタイピングを統一。
 /// </summary>
+[RequireComponent(typeof(TypewriterEffectTMP))]
 public class MessageHistoryDisplay : MonoBehaviour
 {
     [Header("Display Settings")]
-    [Tooltip("履歴を表示する TMP")]
-    [SerializeField] private TextMeshProUGUI historyText;
-
     [Tooltip("表示する最大行数")]
     [SerializeField] private int maxLines = 10;
-
-    [Tooltip("タイピング速度（秒/文字）")]
-    [SerializeField] private float typingSpeed = 0.05f;
 
     [Tooltip("次の行を表示するまでの待機時間（秒）")]
     [SerializeField] private float nextLineInterval = 2.0f;
@@ -33,13 +29,30 @@ public class MessageHistoryDisplay : MonoBehaviour
 
     private Coroutine loopCoroutine;
     private List<string> displayedLines = new List<string>();
+    
+    // TypewriterEffectTMPへの参照
+    private TypewriterEffectTMP typewriterEffect;
+    private TextMeshProUGUI historyText;
+
+    void Awake()
+    {
+        typewriterEffect = GetComponent<TypewriterEffectTMP>();
+        if (typewriterEffect != null)
+        {
+            historyText = typewriterEffect.tmpText;
+        }
+    }
 
     /// <summary>
     /// ランダムメッセージの表示ループを開始する
     /// </summary>
     public void ShowHistory()
     {
-        if (historyText == null) return;
+        if (typewriterEffect == null || historyText == null)
+        {
+            Debug.LogError("[MessageHistoryDisplay] TypewriterEffectTMP または TextMeshProUGUI が見つかりません。");
+            return;
+        }
 
         // 既存のループがあれば停止
         StopLoop();
@@ -86,7 +99,7 @@ public class MessageHistoryDisplay : MonoBehaviour
             string fullText = string.Join("\n", displayedLines);
             historyText.text = fullText;
             
-            // 4. タイピングアニメーション（追加された行の部分だけアニメーション）
+            // 4. タイピングアニメーション（TypewriterEffectTMPを使用）
             // 現在の表示文字数を計算（最後の行以外）
             int previousLength = 0;
             if (displayedLines.Count > 1)
@@ -96,15 +109,13 @@ public class MessageHistoryDisplay : MonoBehaviour
                 previousLength = prevText.Length + 1; // +1 は改行コード分
             }
 
-            // 強制更新して文字数を確定
-            historyText.ForceMeshUpdate();
-            int totalCharacters = historyText.textInfo.characterCount;
+            // TypewriterEffectTMPでタイピング開始（途中から）
+            typewriterEffect.StartDisplayFromIndex(previousLength);
 
-            // アニメーション実行
-            for (int i = previousLength; i <= totalCharacters; i++)
+            // タイピング完了を待つ
+            while (typewriterEffect.IsTyping)
             {
-                historyText.maxVisibleCharacters = i;
-                yield return new WaitForSeconds(typingSpeed);
+                yield return null;
             }
 
             // 5. 待機
@@ -134,6 +145,10 @@ public class MessageHistoryDisplay : MonoBehaviour
     public void HideHistory()
     {
         StopLoop();
+        if (typewriterEffect != null)
+        {
+            typewriterEffect.StopTyping();
+        }
         if (historyText != null)
         {
             historyText.text = "";

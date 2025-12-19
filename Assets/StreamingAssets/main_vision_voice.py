@@ -174,10 +174,12 @@ def process_image(image_path):
         
         if match:
             speech_text = match.group(1).strip()
-            # role_suffix = match.group(2).strip() # Unused but good for debug
+            role_suffix = match.group(2).strip()
+            logger.info(f"[[CHARACTER]] {role_suffix}")
         else:
             # Fallback if format is broken
             speech_text = full_text.split('by')[0].strip()
+            logger.info("[[CHARACTER]] ")
 
         logger.info(f"[[MESSAGE]] {speech_text}")
 
