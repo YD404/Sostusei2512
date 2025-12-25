@@ -12,14 +12,14 @@ Unityがフロントエンド（表示・演出・入力）を担当し、Python
 ```mermaid
 graph TD
     %% Input Layer
-    User[ユーザー体験者] -->|Space Key| CaptureTrigger
-    CaptureTrigger -->|Capture| WebCamCapture
-    WebCamCapture -->|Save PNG| FileSystem[(StreamingAssets)]
+    User[ユーザー体験者] -->|Space Key| CaptureTrigger[captureTrigger.cs]
+    CaptureTrigger -->|CAPTURE コマンド| PythonLauncher[PythonLauncher.cs]
 
     %% Python Bridge
-    PythonLauncher[PythonLauncher.cs] -->|Execute| PythonProcess(main_vision_voice.py)
-    PythonProcess -->|Read PNG| FileSystem
-    PythonProcess -->|Stdout| PythonLauncher
+    PythonLauncher -->|stdin| PythonProcess(main_vision_voice.py)
+    PythonProcess -->|カメラ撮影/YOLO/分析| PythonProcess
+    PythonProcess -->|Save PNG| FileSystem[(StreamingAssets/capture)]
+    PythonProcess -->|stdout| PythonLauncher
     PythonLauncher -->|Log String| Router[PythonMessageRouter.cs]
 
     %% Logic Layer
@@ -47,6 +47,10 @@ graph TD
     MsgFile -->|Read Loop| History
 ```
 
+> [!NOTE]
+> Python側でカメラ撮影・YOLO・CLAHE・背景除去・Ollama分析・DeepSeekセリフ生成・COEIROINK音声合成を実行します。
+> 詳細は [PythonScripts.md](./PythonScripts.md) を参照してください。
+
 ---
 
 ## 2. 主要スクリプト分類
@@ -63,8 +67,8 @@ graph TD
 
 | スクリプト名 | 役割 | 依存関係・備考 |
 | :--- | :--- | :--- |
-| **PythonLauncher.cs** | Pythonプロセス (`main_vision_voice.py`) の起動・監視・終了を行う。標準出力(stdout)をキャプチャしてRouterに渡す。 | `PythonMessageRouter` |
-| **PythonMessageRouter.cs** | Pythonからのログ出力を解析する **"司令塔"**。タグ (`[[STATE_START]]`, `[[MESSAGE]]` 等) を検知し、`FlowManager`への通知やUIへのテキスト反映を行う。 | `FlowManager`, `PanelController`, `RuneSpawner` |
+| **PythonLauncher.cs** | Pythonプロセスの起動・監視・終了。**stdinへのコマンド送信**とstdoutのキャプチャを行う。 | `PythonMessageRouter` |
+| **PythonMessageRouter.cs** | Pythonからのログ出力を解析する **"司令塔"**。タグを検知し、`FlowManager`への通知やUIへのテキスト反映を行う。 | `FlowManager`, `PanelController`, `RuneSpawner` |
 
 ### Visual Effects & UI (演出・表示)
 
@@ -82,8 +86,8 @@ graph TD
 
 | スクリプト名 | 役割 | 依存関係・備考 |
 | :--- | :--- | :--- |
-| **captureTrigger.cs** | キー入力（Spaceキー）を検知し、WebCamCaptureを実行させるトリガー。 | `WebCamCapture` |
-| **WebCamCapture.cs** | 指定されたウェブカメラから画像をキャプチャし、`StreamingAssets/capture` にPNGとして保存する。 | WebCamDevice |
+| **captureTrigger.cs** | キー入力（Spaceキー）を検知し、**Pythonに`CAPTURE`コマンドを送信**。カメラ名キーワードで正しいカメラインデックスを特定。3秒のクールダウン付き。 | `PythonLauncher`, `FlowManager` |
+| **WebCamCapture.cs** | **現在は未使用**（Python側でカメラ撮影を実行）。バックアップとして残している。 | - |
 | **MessageFileWriter.cs** | 受信したメッセージを `Message.txt` に追記保存するユーティリティ。 | File IO |
 | **MessageFileManager.cs** | `Message.txt` の更新を監視する（主にデバッグや外部連携用）。 | File IO |
 
@@ -95,11 +99,11 @@ graph TD
 1. **FlowManager** が `Waiting` 状態になる。
 2. **PanelController** が `State_Waiting` プレハブを表示。
 3. 同プレハブ内の **MessageHistoryDisplay** が起動し、`Message.txt` から過去ログを読み込んで画面に流し続ける。
-4. ユーザーが Spaceキー を押すと、**captureTrigger** → **WebCamCapture** が画像を保存。
+4. ユーザーが Spaceキー を押すと、**captureTrigger** が `CAPTURE` コマンドを **PythonLauncher** 経由でPythonに送信。
 
 ### B. 解析・スキャン (Scanning)
-1. Pythonプロセスが画像保存を検知し、画像解析を開始。
-2. Pythonが `Analyzing image...` または `[[STATE_START]]` を出力。
+1. Pythonが`CAPTURE`コマンドを受信し、カメラ撮影→YOLO→前処理→Ollama分析を開始。
+2. Pythonが `[[STATE_START]]` を出力。
 3. **PythonLauncher** が出力を受信 → **Router** が解析。
 4. **Router** が `FlowManager.NotifyScanStart()` を呼ぶ。
 5. **FlowManager** が `Scanning` 状態へ移行。

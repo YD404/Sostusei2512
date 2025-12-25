@@ -1,48 +1,103 @@
 using UnityEngine;
-using System.Collections; // コルーチンを使用するために必要
 
+/// <summary>
+/// キャプチャトリガー - スペースキーでPythonにキャプチャコマンドを送信
+/// Python側でカメラ撮影とフリッカー対策を行う
+/// </summary>
 public class captureTrigger : MonoBehaviour
 {
-    [SerializeField]
-    private WebCamCapture captureModule;
+    [Header("Dependencies")]
+    [SerializeField] private PythonLauncher pythonLauncher;
+    [SerializeField] private FlowManager flowManager;
 
-    [SerializeField]
-    private FlowManager flowManager; // ★追加: キャプチャ時にScanningに切り替え
-
-    public KeyCode captureKey = KeyCode.Space; // キャプチャに使用するキー
-
-    // 既に遅延実行が要求されているか（連打防止用）
-    private bool isWaitingForCapture = false;
+    [Header("Input Settings")]
+    public KeyCode captureKey = KeyCode.Space;
+    
+    [Header("Cooldown Settings")]
+    [Tooltip("連打防止のクールダウン時間（秒）")]
+    [SerializeField] private float captureCooldown = 3.0f;
+    
+    // 最後のキャプチャ時刻
+    private float lastCaptureTime = -999f;
 
     void Update()
     {
-        // 指定されたキーが押され、かつ現在待機中でない場合
-        if (Input.GetKeyDown(captureKey) && !isWaitingForCapture)
+        // 指定されたキーが押された場合
+        if (Input.GetKeyDown(captureKey))
         {
-            if (captureModule != null)
-            {
-                // 即座にキャプチャ実行
-                // 連打防止のため簡易的にフラグ制御をするなら、一瞬だけ待つか、
-                // あるいはPython側の処理が終わるまで入力を受け付けない制御が必要かもしれないが、
-                // ここでは「即座に」という要望通り遅延なしで実行する。
-                // ただし、連続実行を防ぐならコルーチンで1フレーム待つ程度にするか、
-                // そのまま実行してすぐにフラグを戻す。
-                
-                // 今回はシンプルに即時実行
-                Debug.Log("キャプチャを実行します...");
-                captureModule.CaptureAndSave();
-                Debug.Log("キャプチャを実行しました。");
-
-                // ★追加: キャプチャ実行と同時にScanningに切り替え
-                if (flowManager != null)
-                {
-                    flowManager.NotifyScanStart();
-                }
-            }
-            else
-            {
-                Debug.LogWarning("captureModule が設定されていません。");
-            }
+            TriggerCapture();
         }
     }
+    
+    [Header("Camera Logic")]
+    [Tooltip("検索するカメラ名の一部（例: VID:1133）")]
+    [SerializeField] private string targetCameraKeyword = "VID:1133";
+    
+    // ... (フィールド定義) ...
+
+    /// <summary>
+    /// キャプチャをトリガーする（外部からも呼び出し可能）
+    /// </summary>
+    public void TriggerCapture()
+    {
+        // FlowStateがWaiting以外なら無視
+        if (flowManager != null && flowManager.CurrentState != FlowManager.FlowState.Waiting)
+        {
+            Debug.Log($"[CaptureTrigger] Waiting以外のため無視 (現在: {flowManager.CurrentState})");
+            return;
+        }
+        
+        // クールダウンチェック
+        if (Time.time - lastCaptureTime < captureCooldown)
+        {
+            return;
+        }
+        
+        if (pythonLauncher == null) return;
+        
+        lastCaptureTime = Time.time;
+        
+        // カメラのインデックスを検索
+        int cameraIndex = FindTargetCameraIndex();
+        
+        // コマンド送信 "CAPTURE <index>"
+        string command = $"CAPTURE {cameraIndex}";
+        Debug.Log($"[CaptureTrigger] 送信コマンド: {command} (Target: {targetCameraKeyword})");
+        
+        pythonLauncher.SendCommand(command);
+        
+        if (flowManager != null)
+        {
+            flowManager.NotifyScanStart();
+        }
+    }
+    
+    /// <summary>
+    /// 目標のカメラ名を含むデバイスのインデックスを検索
+    /// </summary>
+    private int FindTargetCameraIndex()
+    {
+        WebCamDevice[] devices = WebCamTexture.devices;
+        if (devices.Length == 0) return 0;
+        
+        for (int i = 0; i < devices.Length; i++)
+        {
+            // キーワードが含まれているかチェック
+            if (devices[i].name.Contains(targetCameraKeyword))
+            {
+                Debug.Log($"[CaptureTrigger] カメラ発見: {devices[i].name} (Index {i})");
+                return i;
+            }
+        }
+        
+        Debug.LogWarning($"[CaptureTrigger] キーワード '{targetCameraKeyword}' を含むカメラが見つかりません。デフォルト(0)を使用します。");
+        // 見つからない場合は、外部カメラっぽいもの(Index 1)があればそれを、なければ0
+        if (devices.Length > 1) return 1;
+        return 0;
+    }
+    
+    /// <summary>
+    /// クールダウン残り時間を取得
+    /// </summary>
+    public float CooldownRemaining => Mathf.Max(0, captureCooldown - (Time.time - lastCaptureTime));
 }

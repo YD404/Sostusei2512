@@ -12,6 +12,7 @@ public class PythonLauncher : MonoBehaviour, IDisposable
     [SerializeField] private PythonMessageRouter messageRouter;
 
     private Process pythonProcess;
+    private StreamWriter stdinWriter;  // stdinへの書き込み用
     private string pythonExecutablePath = "/opt/homebrew/bin/python3.11";
     private static readonly Queue<string> resultQueue = new Queue<string>();
 
@@ -34,6 +35,7 @@ public class PythonLauncher : MonoBehaviour, IDisposable
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = true,  // stdin書き込みを有効化
             CreateNoWindow = true,
             WorkingDirectory = workingDirectory,
             StandardOutputEncoding = Encoding.UTF8,
@@ -68,6 +70,10 @@ public class PythonLauncher : MonoBehaviour, IDisposable
             pythonProcess.Start();
             pythonProcess.BeginOutputReadLine();
             pythonProcess.BeginErrorReadLine();
+            
+            // stdin書き込み用のStreamWriterを取得
+            stdinWriter = pythonProcess.StandardInput;
+            stdinWriter.AutoFlush = true;  // 即座にフラッシュ
 
             UnityEngine.Debug.Log($"Pythonプロセスを開始しました: {scriptPath}");
         }
@@ -112,7 +118,37 @@ public class PythonLauncher : MonoBehaviour, IDisposable
         }
     }
 
+    /// <summary>
+    /// Pythonプロセスにコマンドを送信する
+    /// </summary>
+    /// <param name="command">送信するコマンド（例: "CAPTURE", "QUIT"）</param>
+    public void SendCommand(string command)
+    {
+        if (stdinWriter != null && pythonProcess != null && !pythonProcess.HasExited)
+        {
+            try
+            {
+                stdinWriter.WriteLine(command);
+                UnityEngine.Debug.Log($"[PythonLauncher] コマンド送信: {command}");
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError($"[PythonLauncher] コマンド送信失敗: {e.Message}");
+            }
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("[PythonLauncher] Pythonプロセスが実行されていないため、コマンドを送信できません。");
+        }
+    }
 
+    /// <summary>
+    /// キャプチャコマンドを送信する（外部から呼び出し用）
+    /// </summary>
+    public void SendCaptureCommand()
+    {
+        SendCommand("CAPTURE");
+    }
 
     void OnApplicationQuit()
     {
@@ -123,18 +159,36 @@ public class PythonLauncher : MonoBehaviour, IDisposable
     {
         KillProcess();
     }
+    
     public void Dispose()
     {
         KillProcess();
     }
+    
     private void KillProcess()
     {
         if (pythonProcess != null && !pythonProcess.HasExited)
         {
             try
             {
-                pythonProcess.Kill();
-                UnityEngine.Debug.Log("Pythonプロセスを終了しました。");
+                // まずQUITコマンドを送信して graceful shutdown を試みる
+                if (stdinWriter != null)
+                {
+                    stdinWriter.WriteLine("QUIT");
+                    stdinWriter.Close();
+                    stdinWriter = null;
+                }
+                
+                // 少し待ってから強制終了
+                if (!pythonProcess.WaitForExit(2000))
+                {
+                    pythonProcess.Kill();
+                    UnityEngine.Debug.Log("Pythonプロセスを強制終了しました。");
+                }
+                else
+                {
+                    UnityEngine.Debug.Log("Pythonプロセスが正常に終了しました。");
+                }
             }
             catch (Exception e)
             {

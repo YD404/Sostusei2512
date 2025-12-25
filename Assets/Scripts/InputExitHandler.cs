@@ -49,6 +49,7 @@ public class InputExitHandler : MonoBehaviour
 
                 // 画像の削除
                 DeleteFiles("capture", imageExtensions);
+                DeleteFiles("capture/raw", imageExtensions); // raw画像も削除
                 // 音声の削除
                 DeleteFiles("voice", audioExtensions);
 
