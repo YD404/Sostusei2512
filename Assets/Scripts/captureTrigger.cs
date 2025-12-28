@@ -33,7 +33,42 @@ public class captureTrigger : MonoBehaviour
     [Tooltip("検索するカメラ名の一部（例: VID:1133）")]
     [SerializeField] private string targetCameraKeyword = "VID:1133";
     
-    // ... (フィールド定義) ...
+    [Tooltip("キーワードが見つからない場合に使用するカメラインデックス")]
+    [SerializeField] private int fallbackCameraIndex = 1;  // OBSを避けるため1をデフォルトに
+    
+    [Tooltip("これらのキーワードを含むカメラは強制的に除外（仮想カメラ対策）")]
+    [SerializeField] private string[] excludeKeywords = new string[] { "OBS", "Virtual", "Screen Capture" };
+    
+    /// <summary>
+    /// カメラ名が除外リストに含まれているかチェック
+    /// </summary>
+    private bool IsExcludedCamera(string cameraName)
+    {
+        foreach (string keyword in excludeKeywords)
+        {
+            if (cameraName.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    [ContextMenu("Debug: カメラ一覧を表示")]
+    private void DebugListCameras()
+    {
+        WebCamDevice[] devices = WebCamTexture.devices;
+        Debug.Log($"=== 接続中のカメラデバイス ({devices.Length}台) ===");
+        for (int i = 0; i < devices.Length; i++)
+        {
+            bool excluded = IsExcludedCamera(devices[i].name);
+            bool isTarget = devices[i].name.Contains(targetCameraKeyword);
+            string marker = excluded ? " ❌EXCLUDED" : (isTarget ? " ★TARGET★" : "");
+            Debug.Log($"  Index {i}: {devices[i].name}{marker}");
+        }
+        Debug.Log($"現在のフォールバック: Index {fallbackCameraIndex}");
+        Debug.Log($"除外キーワード: {string.Join(", ", excludeKeywords)}");
+    }
 
     /// <summary>
     /// キャプチャをトリガーする（外部からも呼び出し可能）
@@ -78,11 +113,26 @@ public class captureTrigger : MonoBehaviour
     private int FindTargetCameraIndex()
     {
         WebCamDevice[] devices = WebCamTexture.devices;
-        if (devices.Length == 0) return 0;
+        if (devices.Length == 0) return fallbackCameraIndex;
+        
+        int firstValidIndex = -1;  // 除外されていない最初のカメラ
         
         for (int i = 0; i < devices.Length; i++)
         {
-            // キーワードが含まれているかチェック
+            // 除外チェック（OBS等の仮想カメラを除外）
+            if (IsExcludedCamera(devices[i].name))
+            {
+                Debug.Log($"[CaptureTrigger] 除外: {devices[i].name} (Index {i})");
+                continue;
+            }
+            
+            // 除外されていない最初のカメラを記録
+            if (firstValidIndex < 0)
+            {
+                firstValidIndex = i;
+            }
+            
+            // ターゲットキーワードが含まれているかチェック
             if (devices[i].name.Contains(targetCameraKeyword))
             {
                 Debug.Log($"[CaptureTrigger] カメラ発見: {devices[i].name} (Index {i})");
@@ -90,10 +140,15 @@ public class captureTrigger : MonoBehaviour
             }
         }
         
-        Debug.LogWarning($"[CaptureTrigger] キーワード '{targetCameraKeyword}' を含むカメラが見つかりません。デフォルト(0)を使用します。");
-        // 見つからない場合は、外部カメラっぽいもの(Index 1)があればそれを、なければ0
-        if (devices.Length > 1) return 1;
-        return 0;
+        // ターゲットが見つからない場合、除外されていない最初のカメラを使用
+        if (firstValidIndex >= 0)
+        {
+            Debug.LogWarning($"[CaptureTrigger] キーワード '{targetCameraKeyword}' を含むカメラが見つかりません。有効な最初のカメラ(Index {firstValidIndex})を使用します。");
+            return firstValidIndex;
+        }
+        
+        Debug.LogWarning($"[CaptureTrigger] 有効なカメラが見つかりません。フォールバック({fallbackCameraIndex})を使用します。");
+        return fallbackCameraIndex;
     }
     
     /// <summary>

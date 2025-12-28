@@ -26,6 +26,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPTURE_DIR = os.path.join(SCRIPT_DIR, "capture")
 VOICE_DIR = os.path.join(SCRIPT_DIR, "voice")
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
+MESSAGE_PAIRS_FILE = os.path.join(SCRIPT_DIR, "MessagePairs.json")
 
 # Ensure directories exist
 os.makedirs(CAPTURE_DIR, exist_ok=True)
@@ -124,6 +125,34 @@ def get_voice_uuid(persona_id):
     if variants:
         return random.choice(variants) # Random variation within the persona category
     return None
+
+def _save_message_pair(image_filename, message, credit):
+    """
+    画像とメッセージのペア情報をMessagePairs.jsonに保存する
+    """
+    try:
+        pairs = []
+        if os.path.exists(MESSAGE_PAIRS_FILE):
+            with open(MESSAGE_PAIRS_FILE, 'r', encoding='utf-8') as f:
+                pairs = json.load(f)
+        
+        pair_data = {
+            "image": image_filename,
+            "message": message,
+            "credit": credit,
+            "timestamp": datetime.now().isoformat()
+        }
+        pairs.append(pair_data)
+        
+        # 最新100件に制限
+        pairs = pairs[-100:]
+        
+        with open(MESSAGE_PAIRS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(pairs, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"[[PAIR_SAVED]] {image_filename} -> {message[:30]}...")
+    except Exception as e:
+        logger.error(f"Failed to save message pair: {e}")
 
 def process_image(image_path):
     if os.path.basename(image_path).startswith('.'):
@@ -260,6 +289,11 @@ def _process_analysis(analysis_data, filename):
 
     logger.info(f"[[MESSAGE]] {speech_text}")
 
+    # ペア情報を記録（画像とメッセージの対応）
+    character_name = role_suffix if match else role_name
+    credit_str = f"by {character_name}｜COERIOINK: {voice_settings['name']}" if voice_settings else f"by {character_name}"
+    _save_message_pair(filename, speech_text, credit_str)
+
     if len(speech_text) < 2:
         logger.error("Speech text too short/empty. Skipping TTS.")
         return
@@ -350,7 +384,8 @@ def stdin_listener():
                     if camera_capture.camera_index != target_index:
                         logger.info(f"[[CAPTURE]] Switching camera index: {camera_capture.camera_index} -> {target_index}")
                         camera_capture.release()
-                        camera_capture = CameraCapture(camera_index=target_index)
+                        # Unity側で指定されたインデックスを使用（auto_detect無効）
+                        camera_capture = CameraCapture(camera_index=target_index, auto_detect=False)
                 
                 if not camera_capture._is_initialized:
                     camera_capture.initialize()

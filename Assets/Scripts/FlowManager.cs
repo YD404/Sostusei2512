@@ -15,8 +15,8 @@ public class FlowManager : MonoBehaviour
     [Tooltip("サブディスプレイ用コントローラー。未設定でも動作します。")]
     [SerializeField] private SubPanelController subPanelController;
 
-    [Tooltip("メッセージ履歴表示。未設定でも動作します。")]
-    [SerializeField] private MessageHistoryDisplay messageHistoryDisplay;
+    [Tooltip("名言カード表示。未設定でも動作します。")]
+    [SerializeField] private QuoteCardDisplay quoteCardDisplay;
 
     // 各状態の固定表示時間（秒）
     private const float STATE_DURATION = 10.0f;
@@ -121,12 +121,12 @@ public class FlowManager : MonoBehaviour
             case FlowState.Waiting:
                 panelController.ShowWaitingPanel();
                 if (subPanelController != null) subPanelController.HideMessage();
-                if (messageHistoryDisplay != null) messageHistoryDisplay.ShowHistory();
+                if (quoteCardDisplay != null) quoteCardDisplay.ShowQuoteCard();
                 break;
 
             case FlowState.Scanning:
                 panelController.ShowScanningPanel();
-                if (messageHistoryDisplay != null) messageHistoryDisplay.HideHistory();
+                if (quoteCardDisplay != null) quoteCardDisplay.HideQuoteCard();
                 break;
 
             case FlowState.ScanComplete:
