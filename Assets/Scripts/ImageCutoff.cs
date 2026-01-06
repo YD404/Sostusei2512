@@ -33,6 +33,10 @@ public class ImageCutoff : MonoBehaviour
     private SpriteMask spriteMask;
 
     [SerializeField]
+    [Tooltip("アルファカットオフと同期してアルファ値を変更するスプライト")]
+    private SpriteRenderer targetSpriteRenderer;
+
+    [SerializeField]
     private float duration = 1.5f;
 
     [SerializeField]
@@ -108,6 +112,15 @@ public class ImageCutoff : MonoBehaviour
         if (spriteMask != null)
         {
             spriteMask.alphaCutoff = value;
+        }
+
+        // スプライトのアルファ値もalphaCutoffと同期して変更（チカチカ防止）
+        if (targetSpriteRenderer != null)
+        {
+            Color color = targetSpriteRenderer.color;
+            // alphaCutoffが高い（マスクが多く切り取る）ほどスプライトが透明になるよう同期
+            color.a = 1f - value;
+            targetSpriteRenderer.color = color;
         }
     }
 }

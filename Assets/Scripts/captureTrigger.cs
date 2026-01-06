@@ -63,7 +63,7 @@ public class captureTrigger : MonoBehaviour
         {
             bool excluded = IsExcludedCamera(devices[i].name);
             bool isTarget = devices[i].name.Contains(targetCameraKeyword);
-            string marker = excluded ? " ❌EXCLUDED" : (isTarget ? " ★TARGET★" : "");
+            string marker = excluded ? " !EXCLUDED!" : (isTarget ? " ★TARGET★" : "");
             Debug.Log($"  Index {i}: {devices[i].name}{marker}");
         }
         Debug.Log($"現在のフォールバック: Index {fallbackCameraIndex}");

@@ -1,92 +1,77 @@
-# 処理時間分析レポート
-**日時**: 2025-12-18 18:51:36
+# 処理フロー分析レポート
+**日時**: 2026-01-06 16:28:26 (ログ内ファイル名より推定)
 
 ---
 
-## タイムテーブル（秒数表記）
+## タイムテーブル（シーケンス順）
 
-| 経過時間 | イベント | FlowState |
-|----------|----------|-----------|
-| **0.0s** | アプリ起動・初期化開始 | - |
-| 0.0s | RuneSpawner OnEnable (PanelController.Awake) | - |
-| 0.0s | PanelController 検出完了 | - |
-| 0.0s | ディスプレイ確認 (1台) | - |
-| 0.0s | カメラデバイス列挙 (OBS Virtual Camera) | - |
-| 0.0s | SubPanelController ステータスモード | - |
-| 0.0s | Pythonプロセス開始 | - |
-| **0.0s** | **🔄 FlowState → Waiting** | **⬤ Waiting** |
-| 0.0s | MessageHistoryDisplay 開始 (57件) | Waiting |
-| ~1.0s | カメラ初期化完了 (512x768) | Waiting |
-| | | |
-| ~2.0s | DeepSeekClient initialized | Waiting |
-| ~2.0s | Hybrid Mode 初期化完了 | Waiting |
-| | | |
-| **~3.0s** | **キャプチャ実行** (`capture_20251218185136.png`) | Waiting |
-| ~3.0s | `[[STATE_START]]` 受信 | Waiting |
-| **~3.0s** | **🔄 FlowState → Scanning** | **⬤ Scanning** |
-| ~3.0s | MessageHistoryDisplay 終了 | Scanning |
-| | | |
-| ~3.5s | Ollama画像解析開始 | Scanning |
-| **~5.5s** | Ollama HTTP 200 OK | Scanning |
-| ~5.5s | `[[OLLAMA ANALYSIS]]` 受信 | Scanning |
-| ~5.5s | `[[CREDIT]]` 受信 (虚音イフ) | Scanning |
-| | | |
-| ~5.5s | DeepSeekプロンプト送信 | Scanning |
-| **~8.0s** | DeepSeek HTTP 200 OK | Scanning |
-| **~8.0s** | **🔄 FlowState → ScanComplete** | **⬤ ScanComplete** |
-| ~8.0s | RuneSpawner OnEnable (TimelineState.Enter) | ScanComplete |
-| ~8.0s | ⚠️ ForceSpawnRuneNow (メッセージ空) | ScanComplete |
-| ~8.0s | `[[DEEPSEEK RAW]]` 受信 | ScanComplete |
-| ~8.0s | `[[MESSAGE]]` 受信 | ScanComplete |
-| ~8.0s | RuneSpawner SetMessage・StartSpawning | ScanComplete |
-| ~8.0s | SubPanelController メッセージ保存 | ScanComplete |
-| | | |
-| ~8.5s | TTS Step 1: Prosody推定 | ScanComplete |
-| ~9.0s | TTS Step 2: 音声合成 | ScanComplete |
-| **~11.0s** | TTS Success (227,794 bytes) | ScanComplete |
-| ~11.0s | `[[STATE_COMPLETE]]` 受信 | ScanComplete |
-| ~11.0s | MessageDuration 設定 (4.744s → 6.744s) | ScanComplete |
-| | | |
-| **~11.0s** | **🔄 FlowState → Message** | **⬤ Message** |
-| ~11.0s | SubPanelController ShowMessage | Message |
-| ~11.0s | TypewriterEffect 開始 | Message |
-| ~11.0s | 音声再生開始 | Message |
-| | | |
-| **~17.7s** | **🔄 FlowState → End** | **⬤ End** |
-| | | |
-| **~17.7s** | **🔄 FlowState → Waiting** | **⬤ Waiting** |
-| ~17.7s | SubPanelController HideMessage | Waiting |
-| ~17.7s | MessageHistoryDisplay 再開 (58件) | Waiting |
-| | | |
-| **~20.0s** | Xキー3回押下 → アプリ終了 | Waiting |
+※ログにタイムスタンプがないため、イベント順序のみを記載します。
+
+| 順序 | イベント | FlowState |
+|------|----------|-----------|
+| 1 | **アプリ起動・初期化** | - |
+| 2 | `RuneSpawner` / `PanelController` / `SubPanelController` 起動 | - |
+| 3 | Pythonプロセス開始 (`main_vision_voice.py`) | - |
+| 4 | **🔄 FlowState → Waiting** | **⬤ Waiting** |
+| 5 | Router: Init Messages (DeepSeek, Camera, YOLO, Ollama) | Waiting |
+| 6 | Router: "Clients initialized successfully" (Hybrid Mode) | Waiting |
+| 7 | **キャプチャトリガー** (Camera Index 0 発見) | Waiting |
+| 8 | コマンド送信: `CAPTURE 0` | Waiting |
+| 9 | **🔄 FlowState → Scanning** | **⬤ Scanning** |
+| 10 | Camera: 撮影 & 処理 (1280x720, Stabilized) | Scanning |
+| 11 | YOLO: 1 object detected "cell phone" (0.66) | Scanning |
+| 12 | Preprocess: CLAHE / BG Removal Success | Scanning |
+| 13 | Ollama: Analysis "Smartphone" (Sharp, Normal) | Scanning |
+| 14 | DeepSeek: Prompt送信 (Memory/Sensation) | Scanning |
+| 15 | DeepSeek: 回答受信 "隣の鍵が鳴るたび、少し揺れるんだ。" | Scanning |
+| 16 | **🔄 FlowState → ScanComplete** | **⬤ ScanComplete** |
+| 17 | Router: キャラ名受信 "静かな記憶を持つもの" | ScanComplete |
+| 18 | Router: メッセージ受信 & 保存 | ScanComplete |
+| 19 | **🔄 FlowState → Message** | **⬤ Message** |
+| 20 | SubPanelController: ShowMessage (Typewriter開始) | Message |
+| 21 | **❌ TTS Error**: Connection refused (Port 50032) | Message |
+| 22 | TTS失敗 ("Audio Gen Failed") | Message |
+| 23 | **🔄 FlowState → End** | **⬤ End** |
+| 24 | **🔄 FlowState → Waiting** | **⬤ Waiting** |
+| 25 | QuoteCardDisplay: カード表示 (1件) | Waiting |
+| 26 | Xキー3回押下 → ファイル削除 & 終了 | Waiting |
 
 ---
 
 ## FlowState遷移サマリー
 
 ```
-[0.0s]  ⬤ Waiting
-    ↓  (+3.0s)
-[3.0s]  ⬤ Scanning      ← STATE_START受信
-    ↓  (+5.0s)
-[8.0s]  ⬤ ScanComplete  ← DeepSeek 200 OK受信
-    ↓  (+3.0s)
-[11.0s] ⬤ Message       ← STATE_COMPLETE受信
-    ↓  (+6.7s) ※音声再生時間
-[17.7s] ⬤ End
-    ↓  (即時)
-[17.7s] ⬤ Waiting
+[Start]
+  ↓
+⬤ Waiting
+  ↓  (Capture Trigger)
+⬤ Scanning      ← CAPTUREコマンド送信
+  ↓  (DeepSeek完了)
+⬤ ScanComplete  ← "ScanComplete"検知
+  ↓  (MessageReady)
+⬤ Message       ← 表示開始 (TTS失敗)
+  ↓  (完了)
+⬤ End
+  ↓  (即時)
+⬤ Waiting       ← QuoteCard表示
 ```
 
 ---
 
-## 処理時間の内訳
+## 処理結果・エラー分析
 
-| 処理 | 時間 | 累計 |
-|------|------|------|
-| 初期化〜キャプチャ | 3.0s | 3.0s |
-| Ollama画像解析 | 2.5s | 5.5s |
-| DeepSeekテキスト生成 | 2.5s | 8.0s |
-| TTS音声合成 | 3.0s | 11.0s |
-| 音声再生 + 表示 | 6.7s | 17.7s |
-| **合計** | **17.7s** | |
+| コンポーネント | 結果 | 詳細 |
+|----------------|------|------|
+| **Camera** | ✅ 成功 | Index 0 (USB Camera) を正常に認識・撮影。OBSは無視されました。 |
+| **YOLO** | ✅ 成功 | "cell phone" を検出。 |
+| **Ollama** | ✅ 成功 | "Smartphone" として認識。形状:Sharp, 状態:Normal。 |
+| **DeepSeek** | ✅ 成功 | コンテキストに沿った台詞生成に成功。<br>出力: "隣の鍵が鳴るたび、少し揺れるんだ。 by 静かな記憶を持つもの" |
+| **TTS** | ❌ 失敗 | **Connection refused (Port 50032)**。<br>音声合成サーバーに接続できず、音声は再生されませんでした。 |
+| **UI表示** | ✅ 成功 | TypewriterEffectによりテキストは正常に表示されました。 |
+
+---
+
+## 改善が必要な点
+
+1.  **TTSサーバー接続エラー**: ローカルのTTSサーバー(Port 50032)が起動していないか、接続が拒否されています。Python側のTTSサーバー起動処理を確認する必要があります。
+2.  **QuoteCardDisplay**: 起動直後に `MessagePairs.json` が見つからないエラーが出ていますが、これは初回起動時であれば正常な挙動です（終了時に削除されているため）。

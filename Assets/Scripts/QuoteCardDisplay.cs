@@ -21,6 +21,9 @@ public class QuoteCardDisplay : MonoBehaviour
     [Tooltip("著者名テキスト（by OO）")]
     [SerializeField] private TextMeshProUGUI authorText;
 
+    [Tooltip("吹き出し背景画像（Waiting状態のみ表示）")]
+    [SerializeField] private Image speechBubbleImage;
+
     [Header("Settings")]
     [Tooltip("次のカードに切り替えるまでの時間（秒）")]
     [SerializeField] private float displayInterval = 5.0f;
@@ -51,6 +54,9 @@ public class QuoteCardDisplay : MonoBehaviour
         // 既存のコルーチンを停止
         StopLoop();
 
+        // 吹き出し背景を表示
+        if (speechBubbleImage != null) speechBubbleImage.gameObject.SetActive(true);
+
         // 表示ループ開始
         displayCoroutine = StartCoroutine(DisplayLoop());
         Debug.Log($"[QuoteCardDisplay] 表示開始: {pairs.Count}件のペアデータ");
@@ -63,6 +69,8 @@ public class QuoteCardDisplay : MonoBehaviour
     {
         StopLoop();
         ClearDisplay();
+        // 吹き出し背景を非表示
+        if (speechBubbleImage != null) speechBubbleImage.gameObject.SetActive(false);
         Debug.Log("[QuoteCardDisplay] 表示停止");
     }
 
@@ -143,8 +151,50 @@ public class QuoteCardDisplay : MonoBehaviour
         if (tex.LoadImage(imageData))
         {
             quoteImage.texture = tex;
+            // RawImageの比率に合わせてクリッピング
+            ApplyAspectFitCrop(tex);
         }
         yield return null;
+    }
+
+    /// <summary>
+    /// RawImageのアスペクト比に合わせて、画像を中央からクリッピングする
+    /// </summary>
+    private void ApplyAspectFitCrop(Texture2D tex)
+    {
+        if (quoteImage == null || tex == null) return;
+
+        // RawImageのサイズ
+        RectTransform rt = quoteImage.GetComponent<RectTransform>();
+        float rawWidth = rt.rect.width;
+        float rawHeight = rt.rect.height;
+
+        // 画像のサイズ
+        float texWidth = tex.width;
+        float texHeight = tex.height;
+
+        // アスペクト比
+        float rawAspect = rawWidth / rawHeight;
+        float texAspect = texWidth / texHeight;
+
+        Rect uvRect;
+
+        if (texAspect > rawAspect)
+        {
+            // 画像が横長 → 左右をクリッピング
+            float scale = rawAspect / texAspect;
+            float offset = (1f - scale) / 2f;
+            uvRect = new Rect(offset, 0f, scale, 1f);
+        }
+        else
+        {
+            // 画像が縦長（または同じ） → 上下をクリッピング
+            float scale = texAspect / rawAspect;
+            float offset = (1f - scale) / 2f;
+            uvRect = new Rect(0f, offset, 1f, scale);
+        }
+
+        quoteImage.uvRect = uvRect;
     }
 
     private void ClearDisplay()

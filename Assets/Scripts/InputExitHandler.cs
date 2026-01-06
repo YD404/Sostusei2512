@@ -52,6 +52,8 @@ public class InputExitHandler : MonoBehaviour
                 DeleteFiles("capture/raw", imageExtensions); // raw画像も削除
                 // 音声の削除
                 DeleteFiles("voice", audioExtensions);
+                // ペアデータの削除
+                DeleteMessagePairsJson();
 
                 QuitApplication();
                 xPressCount = 0; // リセット
@@ -91,6 +93,31 @@ public class InputExitHandler : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"フォルダ '{folderName}' のファイル削除中にエラーが発生しました: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// MessagePairs.jsonを削除する
+    /// </summary>
+    private void DeleteMessagePairsJson()
+    {
+        string filePath = Path.Combine(Application.streamingAssetsPath, "MessagePairs.json");
+
+        if (File.Exists(filePath))
+        {
+            try
+            {
+                File.Delete(filePath);
+                Debug.Log("MessagePairs.json を削除しました。");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"MessagePairs.json の削除中にエラーが発生しました: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.Log("MessagePairs.json は存在しません。");
         }
     }
 

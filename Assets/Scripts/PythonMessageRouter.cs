@@ -259,6 +259,12 @@ public class PythonMessageRouter : MonoBehaviour
 
         // ファイル書き込み
         MessageFileWriter.Write(messageBody, currentCredit);
+
+        // ★メッセージ受信完了をFlowManagerに通知 → Message状態へ遷移
+        if (flowManager != null)
+        {
+            flowManager.NotifyMessageReady();
+        }
     }
 
     /// <summary>
@@ -291,10 +297,7 @@ public class PythonMessageRouter : MonoBehaviour
         // FlowManagerに状態遷移を通知
         OnScanCompleteDetected?.Invoke();
         if (flowManager != null) flowManager.NotifyScanComplete();
-
-        // ★追加: ScanCompleteパネル表示後に強制的にメッセージを適用
-        // PanelController.ShowScanCompletePanel() は同期的呼び出しなので、この時点でパネルは表示済み(Active)
-        ForceSpawnRuneNow();
+        // ※ForceSpawnRuneNowは削除: メッセージはHandleMessageで処理される
     }
 
     private void ForceSpawnRuneNow()

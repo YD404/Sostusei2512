@@ -173,6 +173,37 @@ def process_image(image_path):
         import traceback
         traceback.print_exc()
 
+
+def apply_intelligent_brightness(image):
+    """
+    画像の明るさを自動調整する
+    1. ガンマ補正で全体を持ち上げ (gamma=1.5)
+    2. 平均輝度が低い場合はさらにベースの明るさを底上げ
+    """
+    # 1. ガンマ補正（暗部を持ち上げる）
+    gamma = 1.5
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255
+                      for i in range(256)]).astype("uint8")
+    corrected = cv2.LUT(image, table)
+    
+    # 2. 輝度チェックとベースアップ
+    hsv = cv2.cvtColor(corrected, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    mean_brightness = np.mean(v)
+    
+    # 目標輝度（128前後が標準的だが、少し明るめの140を目指す）
+    target_brightness = 140.0
+    
+    if mean_brightness < target_brightness:
+        diff = target_brightness - mean_brightness
+        # 差分の半分程度を加算して自然に明るくする（最大50程度）
+        beta = min(diff * 0.8, 50)
+        corrected = cv2.convertScaleAbs(corrected, alpha=1.0, beta=beta)
+        logger.info(f"[[PREPROCESS]] Brightness boosted: mean={mean_brightness:.1f} -> +{beta:.1f}")
+    
+    return corrected
+
 def process_frame(frame):
     """
     numpy arrayの画像フレームを直接処理する（カメラキャプチャ用）
@@ -200,16 +231,20 @@ def process_frame(frame):
         cropped_frame, detection_info = yolo_processor.detect_and_crop(frame)
         logger.info(f"[[YOLO]] Detection: {detection_info.get('detection_count', 0)} objects, type: {detection_info.get('crop_type', 'none')}")
         
-        # 3. CLAHE（コントラスト調整）を適用
+        # 3. 明るさ調整（暗所対策）
+        logger.info("[[PREPROCESS]] Adjusting brightness...")
+        bright_frame = apply_intelligent_brightness(cropped_frame)
+        
+        # 4. CLAHE（コントラスト調整）を適用
         logger.info("[[PREPROCESS]] Applying CLAHE...")
-        lab = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2LAB)
+        lab = cv2.cvtColor(bright_frame, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         l = clahe.apply(l)
         lab = cv2.merge([l, a, b])
         clahe_frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
         
-        # 4. 背景除去 (rembg)
+        # 5. 背景除去 (rembg)
         logger.info("[[PREPROCESS]] Applying background removal...")
         try:
             _, buffer = cv2.imencode('.png', clahe_frame)
@@ -221,12 +256,12 @@ def process_frame(frame):
             logger.warning(f"[[PREPROCESS]] Background removal failed: {e}, using CLAHE-only")
             final_frame = clahe_frame
         
-        # 5. 最終処理済み画像をcapture/に保存
+        # 6. 最終処理済み画像をcapture/に保存
         processed_path = os.path.join(CAPTURE_DIR, processed_filename)
         cv2.imwrite(processed_path, final_frame)
         logger.info(f"[[CAPTURE]] Final processed image saved: {processed_path}")
         
-        # 6. Ollamaで分析（最終処理済み画像を使用）
+        # 7. Ollamaで分析（最終処理済み画像を使用）
         analysis_data = ollama_client.analyze_image(processed_path)
         logger.info(f"[[OLLAMA ANALYSIS]] Data: {json.dumps(analysis_data, ensure_ascii=False)}")
         
@@ -239,6 +274,7 @@ def process_frame(frame):
     finally:
         is_processing = False
 
+
 def _process_analysis(analysis_data, filename):
     """
     分析結果を処理してセリフ生成・音声合成を行う（共通処理）
@@ -249,14 +285,10 @@ def _process_analysis(analysis_data, filename):
     is_machine_str = str(analysis_data.get("is_machine", False))
     shape_val = analysis_data.get("shape", "Unknown")
     state_val = analysis_data.get("state", "Normal")
-    user_app = analysis_data.get("user_appearance", "None")
 
     obsession_instruction = item_obsessions.get_obsession_instruction(item_name)
     
-    context_str = (
-        f"Context: Machine={is_machine_str}, Shape={shape_val}, State={state_val}.\n"
-        f"User Appearance: {user_app}"
-    )
+    context_str = f"Context: Machine={is_machine_str}, Shape={shape_val}, State={state_val}."
     
     import prompts 
     topic = random.choice(prompts.TOPIC_LIST)

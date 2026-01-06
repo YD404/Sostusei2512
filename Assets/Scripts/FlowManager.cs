@@ -76,6 +76,23 @@ public class FlowManager : MonoBehaviour
     }
 
     /// <summary>
+    /// メッセージ受信完了を通知（PythonMessageRouterから呼び出される）
+    /// ScanComplete状態からMessage状態へ遷移
+    /// </summary>
+    public void NotifyMessageReady()
+    {
+        if (currentState == FlowState.ScanComplete)
+        {
+            Debug.Log("[FlowManager] 検知: MessageReady → Message状態へ遷移");
+            ChangeState(FlowState.Message);
+        }
+        else
+        {
+            Debug.LogWarning($"[FlowManager] NotifyMessageReady: 現在の状態({currentState})がScanCompleteではないため無視");
+        }
+    }
+
+    /// <summary>
     /// Pythonエラー時の処理
     /// </summary>
     public void OnPythonError(string errorMessage)
@@ -130,9 +147,8 @@ public class FlowManager : MonoBehaviour
                 break;
 
             case FlowState.ScanComplete:
-                bool displayed = panelController.ShowScanCompletePanel();
-                float delay = displayed ? STATE_DURATION : 0.1f;
-                Invoke(nameof(OnCompleteFinished), delay);
+                panelController.ShowScanCompletePanel();
+                // ※自動遷移は削除: [[MESSAGE]]受信時にNotifyMessageReady()で遷移する
                 break;
 
             case FlowState.Message:

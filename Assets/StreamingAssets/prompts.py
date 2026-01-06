@@ -24,8 +24,7 @@ Output your conclusion in strict JSON format:
   "is_machine": true/false,
   "shape": "Round/Sharp/Square/Other",
   "state": "Old/New/Dirty/Broken/Normal",
-  "item_name": "Object Name",
-  "user_appearance": "Description of user or None"
+  "item_name": "Object Name"
 }
 """
 

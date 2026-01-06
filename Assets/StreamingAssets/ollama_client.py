@@ -23,6 +23,31 @@ class OllamaClient:
         except Exception:
             return None
 
+    def _normalize_keys(self, data: dict) -> dict:
+        """
+        Normalize JSON keys to handle LLM output inconsistencies.
+        - Strips whitespace from key names
+        - Fixes common typos (is_is_machine -> is_machine)
+        - Ensures expected keys exist with defaults
+        """
+        if not data:
+            return data
+        
+        # Strip whitespace from all keys
+        normalized = {k.strip(): v for k, v in data.items()}
+        
+        # Fix common typos
+        if "is_is_machine" in normalized and "is_machine" not in normalized:
+            normalized["is_machine"] = normalized.pop("is_is_machine")
+        
+        # Ensure expected keys exist with defaults
+        normalized.setdefault("is_machine", False)
+        normalized.setdefault("shape", "Other")
+        normalized.setdefault("state", "Normal")
+        normalized.setdefault("item_name", "Unknown Object")
+        
+        return normalized
+
     def analyze_image(self, image_path: str) -> dict:
         """
         Analyzes the image using local Ollama (Vision Model).
@@ -63,10 +88,11 @@ class OllamaClient:
                     "is_machine": False, 
                     "shape": "Other", 
                     "state": "Normal", 
-                    "item_name": "Unknown Object", 
-                    "user_appearance": "None"
+                    "item_name": "Unknown Object"
                 }
-                
+            
+            # Normalize keys to handle LLM output inconsistencies
+            analysis_data = self._normalize_keys(analysis_data)
             return analysis_data
 
         except Exception as e:
