@@ -33,6 +33,9 @@ public class PanelController : MonoBehaviour
     // ★追加: ScanComplete プレハブ内の RuneSpawner を取得するプロパティ
     public RuneSpawner RuneSpawnerDisplay { get; private set; }
 
+    // ★追加: Scanning プレハブ内の ScanningProgressController を取得するプロパティ
+    public ScanningProgressController ScanningProgressDisplay { get; private set; }
+
     [Header("Skip Settings")]
     [Tooltip("ScanComplete Panelの表示をスキップするか")]
     [SerializeField] private bool skipScanComplete = false;
@@ -79,6 +82,20 @@ public class PanelController : MonoBehaviour
             else
             {
                 Debug.LogWarning("[PanelController] ScanComplete プレハブ内に RuneSpawner が見つかりません。");
+            }
+        }
+
+        // ★追加: Scanning プレハブ内の ScanningProgressController を取得
+        if (instanceScanning != null)
+        {
+            ScanningProgressDisplay = instanceScanning.GetComponentInChildren<ScanningProgressController>(true);
+            if (ScanningProgressDisplay != null)
+            {
+                Debug.Log("[PanelController] ScanningProgressController を検出しました。");
+            }
+            else
+            {
+                Debug.LogWarning("[PanelController] Scanning プレハブ内に ScanningProgressController が見つかりません。");
             }
         }
 
@@ -139,6 +156,16 @@ public class PanelController : MonoBehaviour
     {
         HideAllPanels();
         if (instanceScanning != null) instanceScanning.Enter();
+    }
+
+    /// <summary>
+    /// スキャン完了 (ScanComplete) Panel が表示されるかどうかを事前にチェック。
+    /// FlowManager が状態遷移前にスキップ判定を行うために使用。
+    /// </summary>
+    /// <returns>表示される場合は true、スキップ設定の場合は false</returns>
+    public bool WillShowScanCompletePanel()
+    {
+        return !skipScanComplete;
     }
 
     /// <summary>

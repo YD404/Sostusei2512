@@ -63,6 +63,9 @@ public class FlowManager : MonoBehaviour
         }
     }
 
+    // ScanCompleteスキップ時にScanning状態を維持するフラグ
+    private bool isScanCompleteSkipped = false;
+
     /// <summary>
     /// スキャン完了を通知（PythonMessageRouterから呼び出される）
     /// </summary>
@@ -71,24 +74,38 @@ public class FlowManager : MonoBehaviour
         if (currentState == FlowState.Scanning)
         {
             Debug.Log("[FlowManager] 検知: ScanComplete");
+            
+            // パネルがスキップ設定の場合は状態を変更しない
+            if (panelController != null && !panelController.WillShowScanCompletePanel())
+            {
+                Debug.Log("[FlowManager] ScanCompleteパネルがスキップ設定のため、Scanning状態を維持");
+                isScanCompleteSkipped = true;
+                // 状態は変更せず、Message受信を待つ
+                return;
+            }
+            
+            isScanCompleteSkipped = false;
             ChangeState(FlowState.ScanComplete);
         }
     }
 
     /// <summary>
     /// メッセージ受信完了を通知（PythonMessageRouterから呼び出される）
-    /// ScanComplete状態からMessage状態へ遷移
+    /// ScanComplete状態（またはスキップ時のScanning状態）からMessage状態へ遷移
     /// </summary>
     public void NotifyMessageReady()
     {
-        if (currentState == FlowState.ScanComplete)
+        // ScanCompleteがスキップされた場合、Scanning状態からも遷移可能
+        if (currentState == FlowState.ScanComplete || 
+            (currentState == FlowState.Scanning && isScanCompleteSkipped))
         {
             Debug.Log("[FlowManager] 検知: MessageReady → Message状態へ遷移");
+            isScanCompleteSkipped = false;
             ChangeState(FlowState.Message);
         }
         else
         {
-            Debug.LogWarning($"[FlowManager] NotifyMessageReady: 現在の状態({currentState})がScanCompleteではないため無視");
+            Debug.LogWarning($"[FlowManager] NotifyMessageReady: 現在の状態({currentState})がScanComplete/Scanning(skipped)ではないため無視");
         }
     }
 

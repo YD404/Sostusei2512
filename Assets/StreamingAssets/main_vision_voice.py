@@ -14,7 +14,7 @@ from watchdog.events import FileSystemEventHandler
 # Import Clients
 from ollama_client import OllamaClient
 from deepseek_client import DeepSeekClient
-from voice_client import VoiceClient
+# from voice_client import VoiceClient  # TTS無効化
 from camera_capture import CameraCapture
 from yolo_processor import YOLOProcessor
 from rembg import remove
@@ -61,10 +61,10 @@ PSYCHOLOGICAL_TRIGGERS = config_data.get("PSYCHOLOGICAL_TRIGGERS", [])
 try:
     ollama_client = OllamaClient()
     deepseek_client = DeepSeekClient()
-    voice_client = VoiceClient()
+    # voice_client = VoiceClient()  # TTS無効化
     camera_capture = CameraCapture()
     yolo_processor = YOLOProcessor()
-    logger.info("Clients initialized successfully (Hybrid Mode: YOLO + Ollama + DeepSeek + Camera).")
+    logger.info("Clients initialized successfully (Hybrid Mode: YOLO + Ollama + DeepSeek + Camera, TTS disabled).")
 except Exception as e:
     logger.critical(f"Failed to initialize clients: {e}")
     exit(1)
@@ -293,11 +293,13 @@ def _process_analysis(analysis_data, filename):
     import prompts 
     topic = random.choice(prompts.TOPIC_LIST)
     
-    voice_settings = get_voice_uuid(persona_id)
-    if voice_settings:
-        logger.info(f"[[CREDIT]] COERIOINK: {voice_settings['name']} (Role: {role_name})")
-    else:
-        logger.warning("[[CREDIT]] No voice settings found.")
+    # TTS無効化: voice_settings取得とCOEIROINK表示をスキップ
+    # voice_settings = get_voice_uuid(persona_id)
+    # if voice_settings:
+    #     logger.info(f"[[CREDIT]] COERIOINK: {voice_settings['name']} (Role: {role_name})")
+    # else:
+    #     logger.warning("[[CREDIT]] No voice settings found.")
+    voice_settings = None  # TTS無効化のためNoneに設定
 
     full_text = deepseek_client.generate_dialogue(
         item_name,
@@ -323,35 +325,39 @@ def _process_analysis(analysis_data, filename):
 
     # ペア情報を記録（画像とメッセージの対応）
     character_name = role_suffix if match else role_name
-    credit_str = f"by {character_name}｜COERIOINK: {voice_settings['name']}" if voice_settings else f"by {character_name}"
+    # TTS無効化: COEIROINKクレジットを表示しない
+    credit_str = f"by {character_name}"
     _save_message_pair(filename, speech_text, credit_str)
 
     if len(speech_text) < 2:
-        logger.error("Speech text too short/empty. Skipping TTS.")
+        logger.error("Speech text too short/empty.")
         return
 
-    if voice_settings:
-        audio_data = voice_client.synthesis(
-            speech_text, 
-            voice_settings['uuid'], 
-            voice_settings['style']
-        )
-
-        if audio_data:
-            base_name = os.path.splitext(filename)[0]
-            wav_filename = f"{base_name}.wav"
-            wav_path = os.path.join(VOICE_DIR, wav_filename)
-            
-            try:
-                with open(wav_path, "wb") as f:
-                    f.write(audio_data)
-                logger.info(f"[[STATE_COMPLETE]] Saved audio to {wav_filename}")
-            except Exception as e:
-                logger.error(f"File Write Failed: {e}")
-        else:
-            logger.error("[[STATE_COMPLETE]] Audio Gen Failed")
-    else:
-        logger.error("[[STATE_COMPLETE]] No voice settings")
+    # TTS無効化: 音声合成処理をスキップ
+    # if voice_settings:
+    #     audio_data = voice_client.synthesis(
+    #         speech_text, 
+    #         voice_settings['uuid'], 
+    #         voice_settings['style']
+    #     )
+    #
+    #     if audio_data:
+    #         base_name = os.path.splitext(filename)[0]
+    #         wav_filename = f"{base_name}.wav"
+    #         wav_path = os.path.join(VOICE_DIR, wav_filename)
+    #         
+    #         try:
+    #             with open(wav_path, "wb") as f:
+    #                 f.write(audio_data)
+    #             logger.info(f"[[STATE_COMPLETE]] Saved audio to {wav_filename}")
+    #         except Exception as e:
+    #             logger.error(f"File Write Failed: {e}")
+    #     else:
+    #         logger.error("[[STATE_COMPLETE]] Audio Gen Failed")
+    # else:
+    #     logger.error("[[STATE_COMPLETE]] No voice settings")
+    
+    logger.info("[[STATE_COMPLETE]] Processing finished (TTS disabled)")
 
 # --- Watcher Class (既存のファイル監視も維持) ---
 class ImageHandler(FileSystemEventHandler):
