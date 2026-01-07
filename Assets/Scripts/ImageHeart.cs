@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// UI Imageに鼓動のような点滅・スケーリング演出を行うスクリプト。
-/// AnimationCurveで緩急を調整可能。
+/// AnimationCurveで緩急を調整可能。鼓動に合わせて音声も再生。
 /// </summary>
 [RequireComponent(typeof(Image))]
 public class ImageHeart : MonoBehaviour
@@ -41,11 +41,26 @@ public class ImageHeart : MonoBehaviour
     [Tooltip("最大透明度")]
     [SerializeField] private float maxAlpha = 1.0f;
 
+    [Header("Sound Settings")]
+    [Tooltip("鼓動音を有効にする")]
+    [SerializeField] private bool enableSound = true;
+
+    [Tooltip("鼓動音のAudioClip（短いwavファイル）")]
+    [SerializeField] private AudioClip heartbeatClip;
+
+    [Tooltip("音量 (0〜1)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float volume = 0.5f;
+
+    [Tooltip("音声を再生するAudioSource（未設定なら自動生成）")]
+    [SerializeField] private AudioSource audioSource;
+
     private Image targetImage;
     private RectTransform rectTransform;
     private Color originalColor;
     private Vector3 originalScale;
     private float time = 0f;
+    private bool soundPlayedThisBeat = false;
 
     private void Awake()
     {
@@ -53,6 +68,13 @@ public class ImageHeart : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         originalColor = targetImage.color;
         originalScale = rectTransform.localScale;
+
+        // AudioSourceが未設定なら自動生成
+        if (audioSource == null && enableSound)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+        }
     }
 
     private void Update()
@@ -60,12 +82,26 @@ public class ImageHeart : MonoBehaviour
         // BPMから1拍の周期を計算 (秒)
         float beatDuration = 60f / bpm;
 
+        // 前フレームの時間を記録
+        float prevTime = time;
+
         // 時間を進める (0〜1にループ)
         time += Time.deltaTime / beatDuration;
-        if (time >= 1f) time -= 1f;
+        if (time >= 1f)
+        {
+            time -= 1f;
+            soundPlayedThisBeat = false; // 新しい拍動開始時にリセット
+        }
 
         // カーブから値を取得 (0〜1)
         float pulse = pulseCurve.Evaluate(time);
+
+        // 鼓動のピーク時（time=0.15付近）に音声再生
+        if (enableSound && !soundPlayedThisBeat && time >= 0.1f && prevTime < 0.1f)
+        {
+            PlayHeartbeatSound();
+            soundPlayedThisBeat = true;
+        }
 
         // スケールアニメーション
         if (enableScale)
@@ -81,6 +117,14 @@ public class ImageHeart : MonoBehaviour
             Color c = originalColor;
             c.a = alpha;
             targetImage.color = c;
+        }
+    }
+
+    private void PlayHeartbeatSound()
+    {
+        if (audioSource != null && heartbeatClip != null)
+        {
+            audioSource.PlayOneShot(heartbeatClip, volume);
         }
     }
 
@@ -108,5 +152,13 @@ public class ImageHeart : MonoBehaviour
     {
         minAlpha = min;
         maxAlpha = max;
+    }
+
+    /// <summary>
+    /// 音量を動的に変更する
+    /// </summary>
+    public void SetVolume(float newVolume)
+    {
+        volume = Mathf.Clamp01(newVolume);
     }
 }

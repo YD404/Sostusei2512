@@ -177,9 +177,6 @@ public class PythonMessageRouter : MonoBehaviour
         // サブディスプレイにログ転送
         if (subPanelController != null) subPanelController.SetStatus(line);
 
-        // Scanning進捗: Phase 1 (撮影中)
-        if (scanningProgressController != null) scanningProgressController.ShowPhase(1);
-
         // FlowManagerに状態遷移を通知
         OnScanStartDetected?.Invoke();
         if (flowManager != null) flowManager.NotifyScanStart();
@@ -375,51 +372,6 @@ public class PythonMessageRouter : MonoBehaviour
         if (flowManager != null && flowManager.IsInScanningPhase)
         {
             if (subPanelController != null) subPanelController.SetStatus(line);
-
-            // 遅延取得: scanningProgressControllerがnullならPanelControllerから取得
-            if (scanningProgressController == null && panelController != null)
-            {
-                scanningProgressController = panelController.ScanningProgressDisplay;
-                if (scanningProgressController != null)
-                {
-                    Debug.Log("[Router] ScanningProgressController を遅延取得しました。");
-                }
-            }
-
-            // Scanning進捗フェーズの切り替え
-            if (scanningProgressController != null)
-            {
-                // 大文字小文字を区別しない検索用
-                string lineLower = line.ToLowerInvariant();
-
-                // Phase 2: 分析中 (Ollamaログ検出)
-                if (lineLower.Contains("ollama"))
-                {
-                    Debug.Log($"[Router] Ollamaログ検出: CurrentPhase={scanningProgressController.CurrentPhase}");
-                    if (scanningProgressController.CurrentPhase < 2)
-                    {
-                        scanningProgressController.ShowPhase(2);
-                    }
-                }
-                // Phase 3: 生成中 (DeepSeekログ検出)
-                else if (lineLower.Contains("deepseek"))
-                {
-                    Debug.Log($"[Router] DeepSeekログ検出: CurrentPhase={scanningProgressController.CurrentPhase}");
-                    if (scanningProgressController.CurrentPhase < 3)
-                    {
-                        scanningProgressController.ShowPhase(3);
-                    }
-                }
-            }
-            else
-            {
-                // Debug: ScanningProgressControllerがnullの場合
-                string lineLower = line.ToLowerInvariant();
-                if (lineLower.Contains("ollama") || lineLower.Contains("deepseek"))
-                {
-                    Debug.LogWarning($"[Router] scanningProgressController is NULL! Cannot switch phase for: {line}");
-                }
-            }
         }
     }
 }
