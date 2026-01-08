@@ -129,13 +129,14 @@ def find_physical_camera_index(exclude_keywords=EXCLUDED_CAMERA_KEYWORDS):
 class CameraCapture:
     """フリッカー対策付きのカメラキャプチャクラス"""
     
-    def __init__(self, camera_index=None, width=1280, height=720, auto_detect=True):
+    def __init__(self, camera_index=None, width=1280, height=720, auto_detect=True, exposure=-4):
         """
         Args:
             camera_index: カメラデバイスのインデックス（Noneで自動検出）
             width: キャプチャ幅
             height: キャプチャ高さ
             auto_detect: Trueの場合、仮想カメラを除外して物理カメラを自動検出
+            exposure: 露出値（負の値で暗く、正の値で明るく。デフォルト: -4）
         """
         if camera_index is None and auto_detect:
             self.camera_index = find_physical_camera_index()
@@ -145,6 +146,7 @@ class CameraCapture:
             
         self.width = width
         self.height = height
+        self.exposure = exposure
         self.cap = None
         self._is_initialized = False
     
@@ -164,11 +166,18 @@ class CameraCapture:
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         
+        # 露出設定（自動露出を無効にして手動で設定）
+        # CAP_PROP_AUTO_EXPOSURE: 0.25 = 手動, 0.75 = 自動（カメラによって異なる場合あり）
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # 手動露出モードに切り替え
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        logger.info(f"露出設定: {self.exposure}")
+        
         # 実際の解像度を取得
         actual_w = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         actual_h = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = self.cap.get(cv2.CAP_PROP_FPS)
-        logger.info(f"カメラ初期化完了: {actual_w}x{actual_h} @ {fps}fps")
+        actual_exposure = self.cap.get(cv2.CAP_PROP_EXPOSURE)
+        logger.info(f"カメラ初期化完了: {actual_w}x{actual_h} @ {fps}fps, 露出: {actual_exposure}")
         
         self._is_initialized = True
         return True

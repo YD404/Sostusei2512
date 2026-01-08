@@ -858,9 +858,21 @@ PrefabInstance:
     m_TransformParent: {fileID: 5835720348852387815}
     m_Modifications:
     - target: {fileID: 1631198155690317172, guid: 54c6d72b084984f0b8e3f1f0d558c173, type: 3}
+      propertyPath: volume
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1631198155690317172, guid: 54c6d72b084984f0b8e3f1f0d558c173, type: 3}
       propertyPath: audioSource
       value: 
       objectReference: {fileID: 5702119659805636151}
+    - target: {fileID: 1631198155690317172, guid: 54c6d72b084984f0b8e3f1f0d558c173, type: 3}
+      propertyPath: heartbeatClip
+      value: 
+      objectReference: {fileID: 8300000, guid: a8689cecbb85d4a4da8995d5a5a98f5c, type: 3}
+    - target: {fileID: 4478360088052537771, guid: 54c6d72b084984f0b8e3f1f0d558c173, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: a63805ba24465454c84671fa4d673cfe, type: 3}
     - target: {fileID: 7408263160270326770, guid: 54c6d72b084984f0b8e3f1f0d558c173, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
