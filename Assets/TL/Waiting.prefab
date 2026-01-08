@@ -643,6 +643,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Image (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8346129695860939941, guid: ef79d3d7bfc794f258f2919bb12bee97, type: 3}
+      propertyPath: m_Color.a
+      value: 0.84313726
+      objectReference: {fileID: 0}
     - target: {fileID: 8937755572642815702, guid: ef79d3d7bfc794f258f2919bb12bee97, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
