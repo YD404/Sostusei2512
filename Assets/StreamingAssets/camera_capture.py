@@ -127,21 +127,25 @@ def find_physical_camera_index(exclude_keywords=EXCLUDED_CAMERA_KEYWORDS):
 
 
 class CameraCapture:
-    """フリッカー対策付きのカメラキャプチャクラス"""
+    """マニュアル撮影モード対応のカメラキャプチャクラス"""
     
     def __init__(self, camera_index=None, width=9999, height=9999, auto_detect=True, 
-                 exposure=-12, contrast=35, saturation=None, brightness=35):
+                 exposure=-30, contrast=35, saturation=None, brightness=15,
+                 gain=0, white_balance=None):
         """
+        マニュアル撮影モード: 全ての自動調整を無効にして手動で設定
+        
         Args:
             camera_index: カメラデバイスのインデックス（Noneで自動検出）
             width: キャプチャ幅
             height: キャプチャ高さ
             auto_detect: Trueの場合、仮想カメラを除外して物理カメラを自動検出
-            exposure: 露出値（負の値で暗く、正の値で明るく。デフォルト: -8）
-                      シャッタースピードに影響。負の値=速いシャッター=暗い
-            contrast: コントラスト（0-100程度、低いとのっぺり。Noneでデフォルト）
-            saturation: 彩度（0-100程度、低いと色が薄い。Noneでデフォルト）
-            brightness: 明るさ（0-100程度。Noneでデフォルト）
+            exposure: 露出/シャッタースピード（負の値=速いシャッター=暗い。デフォルト: -12）
+            contrast: コントラスト（低いとのっぺり。デフォルト: 35）
+            saturation: 彩度（低いと色が薄い。Noneでデフォルト）
+            brightness: 明るさ（デフォルト: 35）
+            gain: ゲイン/ISO感度（高いと明るいがノイズ増加。Noneでデフォルト）
+            white_balance: ホワイトバランス色温度（2000-10000K程度。Noneでデフォルト）
         """
         if camera_index is None and auto_detect:
             self.camera_index = find_physical_camera_index()
@@ -155,46 +159,60 @@ class CameraCapture:
         self.contrast = contrast
         self.saturation = saturation
         self.brightness = brightness
+        self.gain = gain
+        self.white_balance = white_balance
         self.cap = None
         self._is_initialized = False
     
     def initialize(self):
-        """カメラを初期化"""
+        """カメラを初期化（マニュアルモード）"""
         if self._is_initialized:
             return True
         
         logger.info(f"カメラ初期化中... (index={self.camera_index})")
+        logger.info("[[CAMERA]] マニュアル撮影モード: 自動調整OFF")
         self.cap = cv2.VideoCapture(self.camera_index)
         
         if not self.cap.isOpened():
             logger.error("カメラを開けませんでした")
             return False
         
-        # カメラ設定
+        # 解像度設定
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         
-        # 露出設定（自動露出を無効にして手動で設定）
-        # CAP_PROP_AUTO_EXPOSURE: 0.25 = 手動, 0.75 = 自動（カメラによって異なる場合あり）
-        # 露出はシャッタースピードに影響：負の値=速いシャッター=暗い画像
-        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # 手動露出モードに切り替え
-        self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-        logger.info(f"露出設定: {self.exposure}")
+        # === マニュアルモード: 全ての自動調整を無効化 ===
         
-        # コントラスト設定（低いとのっぺり、高いとくっきり）
+        # 1. 自動露出OFF → 手動シャッタースピード
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        logger.info(f"  シャッタースピード(露出): {self.exposure}")
+        
+        # 2. ゲイン（ISO感度相当）
+        if self.gain is not None:
+            self.cap.set(cv2.CAP_PROP_GAIN, self.gain)
+            logger.info(f"  ゲイン(ISO): {self.gain}")
+        
+        # 3. 自動ホワイトバランスOFF → 手動色温度
+        if self.white_balance is not None:
+            self.cap.set(cv2.CAP_PROP_AUTO_WB, 0)  # 自動WB OFF
+            self.cap.set(cv2.CAP_PROP_WB_TEMPERATURE, self.white_balance)
+            logger.info(f"  ホワイトバランス: {self.white_balance}K")
+        
+        # 4. コントラスト
         if self.contrast is not None:
             self.cap.set(cv2.CAP_PROP_CONTRAST, self.contrast)
-            logger.info(f"コントラスト設定: {self.contrast}")
+            logger.info(f"  コントラスト: {self.contrast}")
         
-        # 彩度設定（低いと色が薄い、高いと鮮やか）
+        # 5. 彩度
         if self.saturation is not None:
             self.cap.set(cv2.CAP_PROP_SATURATION, self.saturation)
-            logger.info(f"彩度設定: {self.saturation}")
+            logger.info(f"  彩度: {self.saturation}")
         
-        # 明るさ設定
+        # 6. 明るさ
         if self.brightness is not None:
             self.cap.set(cv2.CAP_PROP_BRIGHTNESS, self.brightness)
-            logger.info(f"明るさ設定: {self.brightness}")
+            logger.info(f"  明るさ: {self.brightness}")
         
         # 実際の設定値を取得してログ出力
         actual_w = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
