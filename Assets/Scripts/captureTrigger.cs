@@ -100,11 +100,7 @@ public class captureTrigger : MonoBehaviour
         Debug.Log($"[CaptureTrigger] 送信コマンド: {command} (Target: {targetCameraKeyword})");
         
         pythonLauncher.SendCommand(command);
-        
-        if (flowManager != null)
-        {
-            flowManager.NotifyScanStart();
-        }
+        // ※Scanningへの遷移はPython側からの[[CAPTURE_DONE]]通知で行う
     }
     
     /// <summary>

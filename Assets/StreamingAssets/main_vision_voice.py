@@ -433,6 +433,8 @@ def stdin_listener():
                 frame = camera_capture.capture_with_stabilization()
                 
                 if frame is not None:
+                    # キャプチャ完了をUnityに通知（Scanning状態への遷移トリガー）
+                    logger.info("[[CAPTURE_DONE]]")
                     # 別スレッドで処理（stdinリスナーをブロックしない）
                     process_thread = threading.Thread(
                         target=process_frame, 

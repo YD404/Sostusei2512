@@ -123,9 +123,15 @@ public class PythonMessageRouter : MonoBehaviour
         }
 
         // タグ解析と振り分け
-        if (line.Contains("[[STATE_START]]") || line.Contains("Analyzing image (Local Ollama):"))
+        // [[CAPTURE_DONE]]: キャプチャ完了 → Scanning状態へ遷移
+        if (line.Contains("[[CAPTURE_DONE]]"))
         {
             HandleScanStart(line);
+        }
+        else if (line.Contains("[[STATE_START]]") || line.Contains("Analyzing image (Local Ollama):"))
+        {
+            // 処理開始ログ（Scanning遷移は[[CAPTURE_DONE]]で行うため、ここでは遷移しない）
+            HandleOtherLog(line);
         }
         else if (line.Contains("[[CHARACTER]]"))
         {
