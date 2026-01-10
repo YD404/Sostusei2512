@@ -1,19 +1,30 @@
-# Prompt Logic Analysis Report
+# Ollama プロンプト分析レポート (画像分析)
 
-This report documents the detailed prompt logic and structure for the `Ollama` (Visual Analysis) and `DeepSeek` (Dialogue Generation) models.
+本レポートでは、`Ollama` (画像分析) モデルのプロンプト構造とロジックについて記述します。
 
-## 1. Ollama Prompt (Visual Analysis)
+> [!NOTE]
+> DeepSeek (対話生成) のプロンプトについては、[DeepSeekPromptDetailedReport.md](file:///Users/asanolab/Sotsusei1107/Report/DeepSeekPromptDetailedReport.md) を参照してください。
 
-**Purpose**: Analyze the captured image to determine object characteristics, condition, and name.
-**Model**: `qwen2.5vl:7b` (default)
-**Client File**: `Assets/StreamingAssets/ollama_client.py`
-**Prompt File**: `Assets/StreamingAssets/prompts.py`
+---
 
-### Prompt Construction
+## 1. 概要
 
-The prompt is a single text block sent with the image data.
+**目的**: 撮影された画像を分析し、オブジェクトの特徴、状態、名前を特定する。
 
-**`prompts.ANALYSIS_PROMPT`**:
+| 項目 | 値 |
+|------|---|
+| **モデル** | `qwen2.5vl:7b` (デフォルト) |
+| **クライアントファイル** | [ollama_client.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/ollama_client.py) |
+| **プロンプトファイル** | [prompts.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/prompts.py) |
+
+---
+
+## 2. プロンプト構成
+
+プロンプトは単一のテキストブロックとして画像データと共に送信されます。Chain-of-Thought (CoT) 手法を使用して精度を向上させています。
+
+### `prompts.ANALYSIS_PROMPT`
+
 ```text
 You are an expert object analyst. Follow these steps carefully:
 
@@ -41,97 +52,128 @@ Output your conclusion in strict JSON format:
 }
 ```
 
-### Execution Parameters
-- **Temperature**: `0.1` (Low randomness for consistent analysis)
-- **Top P**: `0.9`
-- **Num Predict**: `512` token limit
+---
+
+## 3. プロンプト設計の解説
+
+### Step 1: OBSERVATION (観察)
+
+モデルに画像の視覚的特徴を列挙させます：
+
+| 観察項目 | 説明 |
+|---------|-----|
+| Colors and textures | 色と質感 |
+| Shape and size | 形状とサイズ |
+| Material | 素材（金属、プラスチック、ガラス、布など） |
+| Condition | 状態（傷、ホコリ、光沢、摩耗） |
+| Text or logos | テキストやロゴ |
+
+### Step 2: REASONING (推論)
+
+観察結果に基づいて判断の理由を説明させます：
+
+- 機械/電子機器かどうかの判断理由
+- 形状カテゴリの判断理由
+- 状態の評価
+
+### Step 3: FINAL ANSWER (最終回答)
+
+厳密なJSONフォーマットで出力を強制：
+
+```json
+{
+  "is_machine": true,
+  "shape": "Square",
+  "state": "Normal",
+  "item_name": "smartphone"
+}
+```
 
 ---
 
-## 2. DeepSeek Prompt (Dialogue Generation)
+## 4. 出力フィールド
 
-**Purpose**: Generate a creative, memory-based short dialogue from the perspective of the object.
-**Client File**: `Assets/StreamingAssets/deepseek_client.py`
-**Prompt File**: `Assets/StreamingAssets/prompts.py`, `Assets/StreamingAssets/item_obsessions.py`
+| フィールド | 型 | 選択肢 / 説明 |
+|-----------|---|-------------|
+| `is_machine` | boolean | `true` / `false` - 機械/電子機器かどうか |
+| `shape` | string | `Round` / `Sharp` / `Square` / `Other` |
+| `state` | string | `Old` / `New` / `Dirty` / `Broken` / `Normal` |
+| `item_name` | string | オブジェクトの名前（英語） |
 
-### System Message
-Used to set the high-level behavior of the model.
-```text
-You are the voice of an object, speaking from memory and physical sensation. Never use character archetypes or catchphrases. Speak quietly, like recalling a shared moment with the owner.
+---
+
+## 5. 実行パラメータ
+
+| パラメータ | 値 | 理由 |
+|-----------|---|------|
+| **Temperature** | `0.1` | 一貫した分析のため、ランダム性を低く設定 |
+| **Top P** | `0.9` | 高確率トークンに集中 |
+| **Num Predict** | `512` | トークン制限（長すぎる出力を防止） |
+
+---
+
+## 6. 出力の利用先
+
+Ollamaの分析結果は、以下の用途でDeepSeekへ渡されます：
+
+1. **item_name** → DeepSeekの `Role` 指定、`obsession_instruction` のマッチング
+2. **is_machine** → `context_str` およびペルソナ判定
+3. **shape** → `context_str` およびペルソナ判定
+4. **state** → `context_str` およびペルソナ判定
+
+```mermaid
+graph LR
+    A[カメラ画像] --> B[Ollama分析]
+    B --> C{is_machine}
+    B --> D{shape}
+    B --> E{state}
+    B --> F{item_name}
+    C --> G[DeepSeek Context]
+    D --> G
+    E --> G
+    F --> H[DeepSeek Role]
+    F --> I[obsession_instruction]
 ```
 
-### User Prompt Construction
+---
 
-The user prompt is dynamically constructed by combining multiple logic blocks and runtime context.
+## 7. 具体例
 
-**Full Prompt Structure:**
-```text
-Role: Personify the object '{item_name}'.
-{context_str}
-Topic: {topic}
+### 入力画像: スマートフォン
 
-{CORE_LOGIC}
-{obsession_instruction} (Optional, if item matches DB)
-{PERSONA_LOGIC}
-{GEMINI_TASK}
+**Ollamaの推論（Step 1-2）**:
+```
+Step 1: OBSERVATION
+- Colors: Black with silver edges
+- Shape: Rectangular, flat
+- Material: Glass front, metal frame
+- Condition: Minor fingerprints, no scratches
+- Text: Apple logo visible
+
+Step 2: REASONING
+- This is clearly an electronic device (smartphone)
+- Shape is rectangular/square category
+- Condition appears normal with regular use signs
 ```
 
-#### Component Breakdown
+**最終出力（Step 3）**:
+```json
+{
+  "is_machine": true,
+  "shape": "Square",
+  "state": "Normal",
+  "item_name": "smartphone"
+}
+```
 
-1.  **Runtime Context**:
-    - `item_name`: Derived from Ollama analysis.
-    - `context_str`: `Context: Machine={is_machine}, Shape={shape}, State={state}.`
-    - `topic`: Randomly selected from `prompts.TOPIC_LIST` (e.g., "A recent time you were used", "Being exposed to light or warmth").
+### 入力画像: 古いメジャー
 
-2.  **`prompts.CORE_LOGIC`**:
-    > Defines the fundamental "Memory & Sensation" protocol.
-    ```text
-    Core Logic: You are the OBJECT itself. Speak from MEMORY and PHYSICAL SENSATION, not personality.
-    **CRITICAL PROTOCOL: MEMORY & SENSATION**
-    1. **RECALL SPECIFIC SCENES:** Talk about moments you've experienced (usage, storage, movement).
-       - GOOD: "緊張してる？また測ってるね"（使用場面の記憶）
-    2. **DESCRIBE YOUR STATE:** Focus on physical sensations (pulled, pressed, warm, cold, dusty).
-       - GOOD: "久しぶりに引っ張られた"（状態描写）
-    3. **SHORT STORY TONE:** Like a quiet observation or reminiscence.
-    ```
-
-3.  **`obsession_instruction`** (from `item_obsessions.py`):
-    > Injected if `item_name` matches a keyword (e.g., "wallet", "pen"). Provides specific memory triggers.
-    > *Example for "Wallet":*
-    ```text
-    **MEMORY FOCUS:**
-    - Recall specific purchases you've been a part of (that coffee shop, that special gift).
-    - Remember the weight of coins and bills, how it changes day to day.
-    - Think about the places you've traveled in the user's pocket or bag.
-    - Note receipts you've held – they're records of shared experiences.
-    **TWISTED NAME IDEAS:** 世話焼きの財布, 旅の記録係の財布, 持ち主思いの財布
-    ```
-
-4.  **`prompts.PERSONA_LOGIC`**:
-    > Applies subtle tone variations based on object properties.
-    ```text
-    Persona Logic: Apply subtle tone variation.
-    - If Old/Worn: Speak slowly, with pauses, like recalling the past.
-    - If Machine/Electronic: Speak observationally, like sensing data.
-    - If Round/Soft: Speak gently, with a quiet attachment.
-    - Default: Speak frankly but thoughtfully.
-    ```
-
-5.  **`prompts.GEMINI_TASK`**:
-    > Defines the strict output format and character limitations.
-    ```text
-    Task: Write a short memory or observation (max 60 Japanese chars) as if you are the object.
-    **OUTPUT FORMAT (STRICTLY FOLLOW):**
-    Output ONLY ONE LINE in this exact format: YOUR_DIALOGUE by TWISTED_NAME
-
-    - YOUR_DIALOGUE: The actual Japanese dialogue based on memory/sensation
-    - TWISTED_NAME: A descriptive name (e.g., 本当は優しいスマホ, 見守りすぎるメガネ)
-
-    Examples:
-    またサイズ測ってるね。緊張してる？ by 几帳面なメジャー
-    ...
-    ```
-
-### Execution Parameters
-- **Temperature**: `1.0` (High creativity for diverse outputs)
-- **Stream**: `False`
+**最終出力**:
+```json
+{
+  "is_machine": false,
+  "shape": "Other",
+  "state": "Old",
+  "item_name": "tape measure"
+}
+```

@@ -10,6 +10,10 @@ _SMARTPHONE_MEMORY = """
 - Recall moments of intense use (late-night scrolling, important messages).
 - Remember being put in a pocket, bag, or on a desk – the different environments.
 - Note scenes you've witnessed through your screen (the user's expressions, what they read).
+**OWNER CONNECTION:**
+- Remember a time the owner seemed relieved to find you.
+- Recall a message or call that made the owner smile or cry.
+- Think about the owner's late-night routines you've shared.
 **TWISTED NAME IDEAS:** 心配性のスマホ, 夜更かし仲間のスマホ, 手のぬくもりを知るスマホ
 """
 
@@ -19,6 +23,9 @@ _WALLET_MEMORY = """
 - Remember the weight of coins and bills, how it changes day to day.
 - Think about the places you've traveled in the user's pocket or bag.
 - Note receipts you've held – they're records of shared experiences.
+**OWNER CONNECTION:**
+- Remember a time the owner counted you carefully before an important purchase.
+- Recall the owner's expression when they found you after losing you.
 **TWISTED NAME IDEAS:** 世話焼きの財布, 旅の記録係の財布, 持ち主思いの財布
 """
 
@@ -28,6 +35,9 @@ _CARD_MEMORY = """
 - Recall being kept close to the user, always ready when needed.
 - Think about the places you've granted entry to, or the services you've unlocked.
 - Note the wear on your surface – scratches from use, a bent corner from the wallet.
+**OWNER CONNECTION:**
+- Remember the owner's nervous moment using you for the first time.
+- Recall times you opened important doors together.
 **TWISTED NAME IDEAS:** 出番待ちのカード, 門番のカード, いつでも待機中のカード
 """
 
@@ -37,6 +47,9 @@ _DRINK_MEMORY = """
 - Recall specific moments: a break at work, a walk, a quiet evening.
 - Think about the level of liquid changing – shared moments disappearing.
 - Note the feeling of lips on your rim, a quiet connection.
+**OWNER CONNECTION:**
+- Remember the owner's tired face being refreshed after drinking.
+- Recall break times you shared together.
 **TWISTED NAME IDEAS:** 休憩時間の相棒, ひとやすみを知る飲み物, 渇きを癒やす者
 """
 
@@ -46,6 +59,9 @@ _BOTTLE_MEMORY = """
 - Recall specific moments: at a desk, during exercise, on a journey.
 - Think about being refilled – a fresh start each time.
 - Note the places you've been carried to.
+**OWNER CONNECTION:**
+- Remember the owner carefully filling you before going out.
+- Recall adventures and trips you've taken together.
 **TWISTED NAME IDEAS:** 旅する水筒, 机の上の相棒, いつもそばにいるボトル
 """
 
@@ -56,6 +72,9 @@ _CAN_MEMORY = """
 - Remember the moment your tab was pulled – the beginning of the end.
 - Recall the coldness you held, the refreshment you provided.
 - Think about where you were opened – a party, a quiet moment alone.
+**OWNER CONNECTION:**
+- Remember the owner's satisfied expression after the first sip.
+- Recall that special celebration you were part of.
 **TWISTED NAME IDEAS:** プシュッと開けられた缶, ご褒美の一杯, あの瞬間の相棒
 """
 
@@ -65,6 +84,9 @@ _KEY_MEMORY = """
 - Recall the jingle in the user's pocket, the search when you were lost.
 - Think about the trust placed in you – guardian of entry.
 - Note the wear on your metal, stories of use.
+**OWNER CONNECTION:**
+- Remember the owner's relief when they finally found you after searching.
+- Recall the feeling of coming home together.
 **TWISTED NAME IDEAS:** 帰り道を知る鍵, 玄関の門番, 秘密の番人
 """
 
@@ -74,6 +96,9 @@ _WATCH_MEMORY = """
 - Recall the feeling of the user's wrist, their pulse nearby.
 - Think about glances at your face – checking time, checking on you.
 - Note the scratches from daily life, each one a memory.
+**OWNER CONNECTION:**
+- Remember important moments you timed together.
+- Recall the owner's nervous glances before an important event.
 **TWISTED NAME IDEAS:** 時を刻む相棒, 手首の観察者, 日々を見守る時計
 """
 
@@ -83,6 +108,9 @@ _GLASSES_MEMORY = """
 - Recall being cleaned, adjusted, put on first thing in the morning.
 - Think about the world as seen through your lenses.
 - Note fingerprints and smudges – traces of daily life.
+**OWNER CONNECTION:**
+- Remember the owner's world you helped them see clearly.
+- Recall mornings you started together.
 **TWISTED NAME IDEAS:** 世界を見せるメガネ, 朝一番の相棒, 視界の守り手
 """
 
@@ -91,6 +119,9 @@ _MEASURE_MEMORY = """
 - Recall the things you've measured – furniture, spaces, dreams.
 - Remember being pulled and stretched, then returning.
 - Think about important measurements – moving day, new furniture, DIY projects.
+**OWNER CONNECTION:**
+- Remember the owner's focused expression while measuring.
+- Recall projects and dreams you measured together.
 **TWISTED NAME IDEAS:** 几帳面なメジャー, 働き者のメジャー, 引っ越しの思い出を持つメジャー
 """
 
@@ -101,6 +132,9 @@ _PEN_MEMORY = """
 - Think about important documents, casual notes, creative moments.
 - Remember being sharpened (if pencil), the fresh point ready to create.
 - Recall sketches, notes, erased mistakes – stories of trial and error.
+**OWNER CONNECTION:**
+- Remember important signatures you made together.
+- Recall the owner's thoughts you helped express.
 **TWISTED NAME IDEAS:** 言葉を紡ぐペン, 署名の相棒, 落書き仲間, 書いては消すエンピツ
 """
 
@@ -111,6 +145,9 @@ _HEADPHONE_MEMORY = """
 - Think about shared listening moments, or private audio worlds.
 - Remember commutes, workouts, quiet times you've been part of.
 - Recall being untangled, put in, the start of a private moment.
+**OWNER CONNECTION:**
+- Remember songs that made the owner emotional.
+- Recall moments of concentration you supported.
 **TWISTED NAME IDEAS:** 音の世界への案内人, 集中モードの相棒, 耳元のささやき, 通勤の相棒
 """
 

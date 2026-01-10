@@ -194,15 +194,11 @@ public class PythonMessageRouter : MonoBehaviour
         Debug.Log($"[Router] キャラ名受信: {charBody}");
         currentCharacter = charBody;
         
-        // [[CHARACTER]]は[[CREDIT]]より後に来るため、ここでクレジットを再構築
-        if (!string.IsNullOrEmpty(currentCredit) && !string.IsNullOrEmpty(currentCharacter))
+        // キャラ名が存在すれば「by キャラクター名」を設定
+        if (!string.IsNullOrEmpty(currentCharacter))
         {
-            // 既存のクレジットから「by ...｜」部分を除去してから再構築
-            string baseCredit = System.Text.RegularExpressions.Regex.Replace(currentCredit, @"^by\s+[^｜]+｜", "").Trim();
-            if (string.IsNullOrEmpty(baseCredit)) baseCredit = currentCredit;
-            
-            currentCredit = $"by {currentCharacter}｜{baseCredit}";
-            Debug.Log($"[Router] クレジット再構築: {currentCredit}");
+            currentCredit = $"by {currentCharacter}";
+            Debug.Log($"[Router] クレジット構築: {currentCredit}");
             
             if (pythonMessageDisplay != null)
             {

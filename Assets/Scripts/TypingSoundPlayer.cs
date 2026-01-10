@@ -56,6 +56,13 @@ public class TypingSoundPlayer : MonoBehaviour
         {
             typewriterEffect.OnCharacterTyped += HandleCharacterTyped;
         }
+
+        // ★追加: AudioVolumeProviderにAudioSourceを登録
+        if (AudioVolumeProvider.Instance != null && audioSource != null)
+        {
+            AudioVolumeProvider.Instance.SetAudioSource(audioSource);
+            Debug.Log("[TypingSoundPlayer] AudioVolumeProvider に AudioSource を登録しました。");
+        }
     }
 
     void OnDisable()
@@ -64,6 +71,13 @@ public class TypingSoundPlayer : MonoBehaviour
         if (typewriterEffect != null)
         {
             typewriterEffect.OnCharacterTyped -= HandleCharacterTyped;
+        }
+
+        // ★追加: AudioVolumeProviderからAudioSourceを解除
+        if (AudioVolumeProvider.Instance != null)
+        {
+            AudioVolumeProvider.Instance.SetAudioSource(null);
+            Debug.Log("[TypingSoundPlayer] AudioVolumeProvider から AudioSource を解除しました。");
         }
     }
 

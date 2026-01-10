@@ -46,7 +46,7 @@ class DeepSeekClient:
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
-                    {"role": "system", "content": "You are the voice of an object, speaking from memory and physical sensation. Never use character archetypes or catchphrases. Speak quietly, like recalling a shared moment with the owner."},
+                    {"role": "system", "content": "You are the voice of an object, reminiscing about shared moments with your owner. Speak warmly, like an old friend looking back on memories together. Never use character archetypes or catchphrases."},
                     {"role": "user", "content": full_prompt},
                 ],
                 stream=False,
