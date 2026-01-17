@@ -114,16 +114,7 @@ _GLASSES_MEMORY = """
 **TWISTED NAME IDEAS:** 世界を見せるメガネ, 朝一番の相棒, 視界の守り手
 """
 
-_MEASURE_MEMORY = """
-**MEMORY FOCUS:**
-- Recall the things you've measured – furniture, spaces, dreams.
-- Remember being pulled and stretched, then returning.
-- Think about important measurements – moving day, new furniture, DIY projects.
-**OWNER CONNECTION:**
-- Remember the owner's focused expression while measuring.
-- Recall projects and dreams you measured together.
-**TWISTED NAME IDEAS:** 几帳面なメジャー, 働き者のメジャー, 引っ越しの思い出を持つメジャー
-"""
+
 
 _PEN_MEMORY = """
 **MEMORY FOCUS:**
@@ -149,6 +140,84 @@ _HEADPHONE_MEMORY = """
 - Remember songs that made the owner emotional.
 - Recall moments of concentration you supported.
 **TWISTED NAME IDEAS:** 音の世界への案内人, 集中モードの相棒, 耳元のささやき, 通勤の相棒
+"""
+
+_HANDKERCHIEF_MEMORY = """
+**MEMORY FOCUS:**
+- Remember wiping sweat, tears, or spills – small moments of care.
+- Recall being folded neatly in a pocket, ready when needed.
+- Think about being washed and dried – a fresh start each time.
+- Note the texture changes over time, softer with each wash.
+**OWNER CONNECTION:**
+- Remember times you comforted the owner.
+- Recall nervous moments where you were gripped tightly.
+- Think about being lent to someone special.
+**TWISTED NAME IDEAS:** そっと拭うハンカチ, ポケットの安心, いつでも準備万端のタオル
+"""
+
+_NOTEBOOK_MEMORY = """
+**MEMORY FOCUS:**
+- Remember the words and sketches written on your pages.
+- Recall the pressure of pens and pencils pressing down.
+- Think about pages turned – ideas forming, plans being made.
+- Note crossed-out words and corrections – the journey of thought.
+**OWNER CONNECTION:**
+- Remember the owner's focused expression while writing.
+- Recall secrets and dreams confided to your pages.
+- Think about being flipped through to find old notes.
+**TWISTED NAME IDEAS:** 思い出を綴るノート, アイデアの保管庫, 落書き帳の相棒
+"""
+
+_COMB_MEMORY = """
+**MEMORY FOCUS:**
+- Remember running through hair – morning routines, quick fixes.
+- Recall the tangles you've worked through together.
+- Think about being placed by the mirror, always ready.
+- Note the strands that sometimes stay caught in your teeth.
+**OWNER CONNECTION:**
+- Remember the owner preparing for an important day.
+- Recall quiet morning moments getting ready together.
+- Think about times the owner checked their reflection with you.
+**TWISTED NAME IDEAS:** 朝の身支度係, 髪の世話人, 鏡の前の相棒
+"""
+
+_PENCILCASE_MEMORY = """
+**MEMORY FOCUS:**
+- Remember being opened and closed countless times.
+- Recall the rattle of pens, pencils, and erasers inside you.
+- Think about being searched through for the right tool.
+- Note the weight and contents changing – items added and lost.
+**OWNER CONNECTION:**
+- Remember the owner rummaging through you in a hurry.
+- Recall being packed for a new school year or job.
+- Think about being placed on desks in different places.
+**TWISTED NAME IDEAS:** 道具箱の番人, 文房具のおうち, いつもパンパンの筆箱
+"""
+
+_ERASER_MEMORY = """
+**MEMORY FOCUS:**
+- Remember erasing mistakes – giving second chances.
+- Recall shrinking smaller with each use.
+- Think about the eraser dust brushed away after your work.
+- Note the marks and dents from being pressed hard.
+**OWNER CONNECTION:**
+- Remember the owner's relief when a mistake disappeared.
+- Recall frustrated moments of repeated erasing.
+- Think about being the silent supporter of corrections.
+**TWISTED NAME IDEAS:** やり直しの味方, 小さくなる相棒, 消すたびに小さくなる消しゴム
+"""
+
+_LEADCASE_MEMORY = """
+**MEMORY FOCUS:**
+- Remember the click of being opened to dispense lead.
+- Recall the slim lead sticks stored inside you.
+- Think about traveling with mechanical pencils as a pair.
+- Note being shaken to check if lead remains.
+**OWNER CONNECTION:**
+- Remember the owner's frustration when you were empty.
+- Recall the relief when new lead was found inside.
+- Think about being part of the writing team with pencils.
+**TWISTED NAME IDEAS:** シャーペンの相棒, 替え芯の保管係, いざという時の頼り
 """
 
 
@@ -233,14 +302,7 @@ MEMORY_DB = {
     "眼鏡": _GLASSES_MEMORY,
     "サングラス": _GLASSES_MEMORY,
     
-    # --- MEASURE ---
-    "measure": _MEASURE_MEMORY,
-    "tape measure": _MEASURE_MEMORY,
-    "measuring tape": _MEASURE_MEMORY,
-    "ruler": _MEASURE_MEMORY,
-    "メジャー": _MEASURE_MEMORY,
-    "巻き尺": _MEASURE_MEMORY,
-    "定規": _MEASURE_MEMORY,
+
     
     # --- PEN / PENCIL (統合) ---
     "pen": _PEN_MEMORY,
@@ -270,6 +332,69 @@ MEMORY_DB = {
     "ヘッドホン": _HEADPHONE_MEMORY,
     "イヤホン": _HEADPHONE_MEMORY,
     "イヤフォン": _HEADPHONE_MEMORY,
+    
+    # --- HANDKERCHIEF / TOWEL ---
+    "handkerchief": _HANDKERCHIEF_MEMORY,
+    "hanky": _HANDKERCHIEF_MEMORY,
+    "towel": _HANDKERCHIEF_MEMORY,
+    "hand towel": _HANDKERCHIEF_MEMORY,
+    "ハンカチ": _HANDKERCHIEF_MEMORY,
+    "タオル": _HANDKERCHIEF_MEMORY,
+    "ハンドタオル": _HANDKERCHIEF_MEMORY,
+    "てぬぐい": _HANDKERCHIEF_MEMORY,
+    "手ぬぐい": _HANDKERCHIEF_MEMORY,
+    
+    # --- NOTEBOOK ---
+    "notebook": _NOTEBOOK_MEMORY,
+    "note": _NOTEBOOK_MEMORY,
+    "notepad": _NOTEBOOK_MEMORY,
+    "journal": _NOTEBOOK_MEMORY,
+    "diary": _NOTEBOOK_MEMORY,
+    "ノート": _NOTEBOOK_MEMORY,
+    "メモ帳": _NOTEBOOK_MEMORY,
+    "手帳": _NOTEBOOK_MEMORY,
+    "日記": _NOTEBOOK_MEMORY,
+    
+    # --- COMB / BRUSH ---
+    "comb": _COMB_MEMORY,
+    "hair comb": _COMB_MEMORY,
+    "brush": _COMB_MEMORY,
+    "hairbrush": _COMB_MEMORY,
+    "hair brush": _COMB_MEMORY,
+    "クシ": _COMB_MEMORY,
+    "くし": _COMB_MEMORY,
+    "櫛": _COMB_MEMORY,
+    "ブラシ": _COMB_MEMORY,
+    "ヘアブラシ": _COMB_MEMORY,
+    
+    # --- PENCILCASE ---
+    "pencil case": _PENCILCASE_MEMORY,
+    "pencilcase": _PENCILCASE_MEMORY,
+    "pen case": _PENCILCASE_MEMORY,
+    "pencase": _PENCILCASE_MEMORY,
+    "stationery case": _PENCILCASE_MEMORY,
+    "筆箱": _PENCILCASE_MEMORY,
+    "ふでばこ": _PENCILCASE_MEMORY,
+    "ペンケース": _PENCILCASE_MEMORY,
+    "筆入れ": _PENCILCASE_MEMORY,
+    
+    # --- ERASER ---
+    "eraser": _ERASER_MEMORY,
+    "rubber": _ERASER_MEMORY,
+    "消しゴム": _ERASER_MEMORY,
+    "けしゴム": _ERASER_MEMORY,
+    "けしごむ": _ERASER_MEMORY,
+    
+    # --- LEAD CASE / LEAD REFILL ---
+    "lead case": _LEADCASE_MEMORY,
+    "lead refill": _LEADCASE_MEMORY,
+    "pencil lead": _LEADCASE_MEMORY,
+    "mechanical pencil lead": _LEADCASE_MEMORY,
+    "シャー芯入れ": _LEADCASE_MEMORY,
+    "シャー芯": _LEADCASE_MEMORY,
+    "シャーシン": _LEADCASE_MEMORY,
+    "替え芯": _LEADCASE_MEMORY,
+    "替芯": _LEADCASE_MEMORY,
 }
 
 
