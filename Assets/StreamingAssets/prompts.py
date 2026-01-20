@@ -4,6 +4,11 @@
 ANALYSIS_PROMPT = """
 You are an expert object analyst. Analyze the image following these steps:
 
+**CONTEXT:**
+The image shows an object placed on a SQUARE DISPLAY STAND/PLATFORM.
+- You must IGNORE the square stand and focus ONLY on the object placed ON TOP of it.
+- Do not identify the stand as the object (e.g., do not call it a phone just because the stand is rectangular).
+
 **Step 1: OBSERVATION**
 Describe what you see:
 - Colors, textures, and materials (metal, plastic, glass, fabric, wood, etc.)
@@ -38,6 +43,11 @@ You are an expert object analyst.
 
 **DETECTION HINT:** "{yolo_hint}"
 This hint comes from an automated detection system. Use it as a starting point, but verify through careful observation. The hint may be inaccurate.
+
+**CONTEXT:**
+The object is placed on a SQUARE DISPLAY STAND/PLATFORM.
+- You must IGNORE the stand and focus ONLY on the object placed ON TOP of it.
+- If the hint says "cell phone" or "smartphone", it is likely MISIDENTIFYING the square stand. Be extremely skeptical of this hint.
 
 **Step 1: OBSERVATION**
 Describe what you see:
