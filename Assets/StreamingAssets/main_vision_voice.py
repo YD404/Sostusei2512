@@ -261,8 +261,22 @@ def process_frame(frame):
         cv2.imwrite(processed_path, final_frame)
         logger.info(f"[[CAPTURE]] Final processed image saved: {processed_path}")
         
-        # 7. Ollamaで分析（最終処理済み画像を使用）
-        analysis_data = ollama_client.analyze_image(processed_path)
+        # 7. YOLOヒントを生成
+        yolo_hint = None
+        primary_class = detection_info.get("primary_class")
+        primary_confidence = detection_info.get("primary_confidence", 0.0)
+        detected_classes = detection_info.get("detected_classes", [])
+        
+        if primary_class:
+            if len(detected_classes) > 1:
+                other_classes = [c for c in detected_classes if c != primary_class]
+                yolo_hint = f"Primary: {primary_class} (confidence: {primary_confidence:.2f}), also detected: {', '.join(other_classes)}"
+            else:
+                yolo_hint = f"{primary_class} (confidence: {primary_confidence:.2f})"
+            logger.info(f"[[YOLO HINT]] Generated: {yolo_hint}")
+        
+        # 8. Ollamaで分析（最終処理済み画像を使用、YOLOヒント付き）
+        analysis_data = ollama_client.analyze_image(processed_path, yolo_hint=yolo_hint)
         logger.info(f"[[OLLAMA ANALYSIS]] Data: {json.dumps(analysis_data, ensure_ascii=False)}")
         
         _process_analysis(analysis_data, processed_filename)
@@ -281,7 +295,14 @@ def _process_analysis(analysis_data, filename):
     """
     persona_id, role_name = determine_persona(analysis_data)
     
-    item_name = analysis_data.get("item_name", "Object")
+    item_name_raw = analysis_data.get("item_name", "Object")
+    
+    # アイテム名を正規化（既知リストとのマッチング）
+    item_name = ollama_client.match_to_known_items(
+        item_name_raw, 
+        item_obsessions.CANONICAL_ITEMS
+    )
+    
     is_machine_str = str(analysis_data.get("is_machine", False))
     shape_val = analysis_data.get("shape", "Unknown")
     state_val = analysis_data.get("state", "Normal")

@@ -1,18 +1,52 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
-/// 画像スライドショーを表示するシステム。
-/// 事前に配置した複数のUI Imageオブジェクトを順番にアクティブ/非アクティブで切り替える。
-/// 各画像のサイズ・位置は個別に調整可能。
+/// 画像またはテキストのスライドショーを表示するシステム。
+/// 画像スライドとテキストスライドを混在させることが可能。
 /// </summary>
 public class WaitingSlideshow : MonoBehaviour
 {
-    [Header("スライドショー設定")]
-    [Tooltip("スライドショーに使用するUI画像オブジェクトの配列（事前に配置済み）")]
-    [SerializeField] private GameObject[] slideObjects;
+    /// <summary>
+    /// スライドの種類
+    /// </summary>
+    public enum SlideType
+    {
+        Image,  // 画像スライド（既存のGameObjectを表示）
+        Text    // テキストスライド
+    }
 
-    [Tooltip("画像の切り替え間隔（秒）")]
+    /// <summary>
+    /// スライドデータを保持する構造体
+    /// </summary>
+    [System.Serializable]
+    public class SlideData
+    {
+        [Tooltip("スライドの種類")]
+        public SlideType type = SlideType.Image;
+
+        [Tooltip("画像スライド用: 表示するGameObject")]
+        public GameObject imageObject;
+
+        [Tooltip("テキストスライド用: 表示するテキスト内容")]
+        [TextArea(3, 10)]
+        public string textContent;
+    }
+
+    [Header("スライドショー設定")]
+    [Tooltip("スライドデータの配列")]
+    [SerializeField] private SlideData[] slides;
+
+    [Tooltip("スライドの切り替え間隔（秒）")]
     [SerializeField] private float slideInterval = 5.0f;
+
+    [Header("テキスト表示設定")]
+    [Tooltip("テキストスライド表示用のTextMeshProUGUI")]
+    [SerializeField] private TextMeshProUGUI textDisplay;
+
+    [Tooltip("テキスト表示用の親オブジェクト（CanvasGroupを持つ）")]
+    [SerializeField] private GameObject textContainer;
 
     [Header("フェード設定")]
     [Tooltip("フェード演出を使用するか")]
@@ -27,7 +61,6 @@ public class WaitingSlideshow : MonoBehaviour
     // フェード用
     private bool isFading = false;
     private float fadeTimer = 0f;
-    private bool isFadingOut = true;
     private CanvasGroup currentCanvasGroup;
     private CanvasGroup nextCanvasGroup;
 
@@ -38,28 +71,27 @@ public class WaitingSlideshow : MonoBehaviour
         timer = 0f;
         isFading = false;
 
-        // 全てのスライドを非表示にして、最初の1枚だけ表示
-        if (slideObjects != null && slideObjects.Length > 0)
-        {
-            for (int i = 0; i < slideObjects.Length; i++)
-            {
-                if (slideObjects[i] != null)
-                {
-                    slideObjects[i].SetActive(i == 0);
-                    // CanvasGroupがあればアルファを1に
-                    var cg = slideObjects[i].GetComponent<CanvasGroup>();
-                    if (cg != null) cg.alpha = (i == 0) ? 1f : 0f;
-                }
-            }
-        }
+        if (slides == null || slides.Length == 0) return;
+
+        // 全てのスライドを非表示にする
+        HideAllSlides();
+
+        // 最初のスライドを表示
+        ShowSlide(0, true);
+    }
+
+    void OnDisable()
+    {
+        // 無効化時に全て非表示
+        HideAllSlides();
     }
 
     void Update()
     {
-        if (slideObjects == null || slideObjects.Length == 0) return;
+        if (slides == null || slides.Length == 0) return;
 
-        // 画像が1枚以下なら切り替え不要
-        if (slideObjects.Length <= 1) return;
+        // スライドが1枚以下なら切り替え不要
+        if (slides.Length <= 1) return;
 
         // フェード処理中
         if (isFading)
@@ -79,32 +111,132 @@ public class WaitingSlideshow : MonoBehaviour
     }
 
     /// <summary>
+    /// 全てのスライドを非表示にする
+    /// </summary>
+    private void HideAllSlides()
+    {
+        // 全ての画像オブジェクトを非表示
+        foreach (var slide in slides)
+        {
+            if (slide.type == SlideType.Image && slide.imageObject != null)
+            {
+                slide.imageObject.SetActive(false);
+                var cg = slide.imageObject.GetComponent<CanvasGroup>();
+                if (cg != null) cg.alpha = 0f;
+            }
+        }
+
+        // テキストコンテナを非表示
+        if (textContainer != null)
+        {
+            textContainer.SetActive(false);
+            var cg = textContainer.GetComponent<CanvasGroup>();
+            if (cg != null) cg.alpha = 0f;
+        }
+    }
+
+    /// <summary>
+    /// 指定したスライドを表示する
+    /// </summary>
+    private void ShowSlide(int index, bool fullAlpha)
+    {
+        if (index < 0 || index >= slides.Length) return;
+
+        var slide = slides[index];
+        float alpha = fullAlpha ? 1f : 0f;
+
+        if (slide.type == SlideType.Image)
+        {
+            if (slide.imageObject != null)
+            {
+                slide.imageObject.SetActive(true);
+                var cg = GetOrAddCanvasGroup(slide.imageObject);
+                if (cg != null) cg.alpha = alpha;
+            }
+        }
+        else if (slide.type == SlideType.Text)
+        {
+            if (textContainer != null && textDisplay != null)
+            {
+                textDisplay.text = slide.textContent;
+                textContainer.SetActive(true);
+                var cg = GetOrAddCanvasGroup(textContainer);
+                if (cg != null) cg.alpha = alpha;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 指定したスライドを非表示にする
+    /// </summary>
+    private void HideSlide(int index)
+    {
+        if (index < 0 || index >= slides.Length) return;
+
+        var slide = slides[index];
+
+        if (slide.type == SlideType.Image)
+        {
+            if (slide.imageObject != null)
+            {
+                slide.imageObject.SetActive(false);
+            }
+        }
+        else if (slide.type == SlideType.Text)
+        {
+            if (textContainer != null)
+            {
+                textContainer.SetActive(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// スライドのCanvasGroupを取得
+    /// </summary>
+    private CanvasGroup GetSlideCanvasGroup(int index)
+    {
+        if (index < 0 || index >= slides.Length) return null;
+
+        var slide = slides[index];
+
+        if (slide.type == SlideType.Image)
+        {
+            return slide.imageObject != null ? GetOrAddCanvasGroup(slide.imageObject) : null;
+        }
+        else if (slide.type == SlideType.Text)
+        {
+            return textContainer != null ? GetOrAddCanvasGroup(textContainer) : null;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// 次のスライドへ切り替え
     /// </summary>
     private void NextSlide()
     {
-        int nextIndex = (currentIndex + 1) % slideObjects.Length;
+        int nextIndex = (currentIndex + 1) % slides.Length;
 
         if (useFade)
         {
-            // フェード用CanvasGroupを取得（なければ追加）
-            currentCanvasGroup = GetOrAddCanvasGroup(slideObjects[currentIndex]);
-            nextCanvasGroup = GetOrAddCanvasGroup(slideObjects[nextIndex]);
-
-            // 次のスライドを表示（アルファ0で）
-            slideObjects[nextIndex].SetActive(true);
-            nextCanvasGroup.alpha = 0f;
+            // フェード用CanvasGroupを取得
+            currentCanvasGroup = GetSlideCanvasGroup(currentIndex);
+            
+            // 次のスライドを表示準備
+            ShowSlide(nextIndex, false);
+            nextCanvasGroup = GetSlideCanvasGroup(nextIndex);
 
             // フェード開始
             isFading = true;
-            isFadingOut = true;
             fadeTimer = 0f;
         }
         else
         {
             // 即時切り替え
-            slideObjects[currentIndex].SetActive(false);
-            slideObjects[nextIndex].SetActive(true);
+            HideSlide(currentIndex);
+            ShowSlide(nextIndex, true);
             currentIndex = nextIndex;
         }
     }
@@ -124,8 +256,8 @@ public class WaitingSlideshow : MonoBehaviour
         if (t >= 1f)
         {
             // フェード完了
-            int nextIndex = (currentIndex + 1) % slideObjects.Length;
-            slideObjects[currentIndex].SetActive(false);
+            int nextIndex = (currentIndex + 1) % slides.Length;
+            HideSlide(currentIndex);
             currentIndex = nextIndex;
             isFading = false;
         }

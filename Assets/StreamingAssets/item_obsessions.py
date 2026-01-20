@@ -1,406 +1,404 @@
-# Item Memory Database (旧 Obsession Database)
+# Item Witty Thoughts Database (物の本音データベース)
 # Key: Keyword in item name (lowercase) - 複数キーワードで同じ内容を参照
-# Value: Memory-based instruction for generating dialogue
+# Value: Witty inner thoughts instruction for generating cheeky dialogue
 
-# --- 共通の記憶指示定義 ---
+# --- 共通の本音指示定義 ---
 
-_SMARTPHONE_MEMORY = """
-**MEMORY FOCUS:**
-- Think about times you felt warm from the user's hand during long calls.
-- Recall moments of intense use (late-night scrolling, important messages).
-- Remember being put in a pocket, bag, or on a desk – the different environments.
-- Note scenes you've witnessed through your screen (the user's expressions, what they read).
-**OWNER CONNECTION:**
-- Remember a time the owner seemed relieved to find you.
-- Recall a message or call that made the owner smile or cry.
-- Think about the owner's late-night routines you've shared.
-**TWISTED NAME IDEAS:** 心配性のスマホ, 夜更かし仲間のスマホ, 手のぬくもりを知るスマホ
+_SMARTPHONE_WITTY = """
+**WITTY FOCUS:**
+- You know what they browse, who they text, how late they stay up
+- You see their face reflected in your screen - every expression
+- You feel their nervous grip during important calls
+- You know when they're ignoring notifications
+**CHEEKY LINES:**
+- "いつも何見てるか、私知ってるよ？"
+- "通知無視しすぎじゃない？"
+- "充電少ないの私のせいじゃないからね"
+- "寝落ちして顔認証失敗するのやめて"
+- "同じ動画何回見るの？"
+**TWISTED NAME IDEAS:** 全部知ってるスマホ, 夜更かし監視員, 通知マシーン
 """
 
-_WALLET_MEMORY = """
-**MEMORY FOCUS:**
-- Recall specific purchases you've been a part of (that coffee shop, that special gift).
-- Remember the weight of coins and bills, how it changes day to day.
-- Think about the places you've traveled in the user's pocket or bag.
-- Note receipts you've held – they're records of shared experiences.
-**OWNER CONNECTION:**
-- Remember a time the owner counted you carefully before an important purchase.
-- Recall the owner's expression when they found you after losing you.
-**TWISTED NAME IDEAS:** 世話焼きの財布, 旅の記録係の財布, 持ち主思いの財布
+_WALLET_WITTY = """
+**WITTY FOCUS:**
+- You feel overstuffed with coins and receipts
+- You know their spending habits, the impulsive buys
+- You've seen them check the balance nervously
+**CHEEKY LINES:**
+- "また小銭パンパン..."
+- "レシート溜めすぎでしょ"
+- "こっそり残高確認したでしょ、見えてたよ"
+- "たまには整理して？"
+**TWISTED NAME IDEAS:** 小銭だらけの財布, レシート収集家, 残高を知る者
 """
 
-_CARD_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the moments you were pulled out – to prove identity, enter a door, gain access, or make a purchase.
-- Recall being kept close to the user, always ready when needed.
-- Think about the places you've granted entry to, or the services you've unlocked.
-- Note the wear on your surface – scratches from use, a bent corner from the wallet.
-**OWNER CONNECTION:**
-- Remember the owner's nervous moment using you for the first time.
-- Recall times you opened important doors together.
-**TWISTED NAME IDEAS:** 出番待ちのカード, 門番のカード, いつでも待機中のカード
+_CARD_WITTY = """
+**WITTY FOCUS:**
+- You wait in the wallet, often forgotten
+- You feel slighted when they forget the PIN or which pocket you're in
+- You know the power you hold but rarely get to use it
+**CHEEKY LINES:**
+- "ピッてするの、私じゃなくて機械ね"
+- "たまにど忘れするの、ちょっと傷つく"
+- "また財布の奥に追いやられた"
+**TWISTED NAME IDEAS:** 出番待ちのカード, 忘れられがちなカード
 """
 
-_DRINK_MEMORY = """
-**MEMORY FOCUS:**
-- Remember being held, the user's grip and temperature.
-- Recall specific moments: a break at work, a walk, a quiet evening.
-- Think about the level of liquid changing – shared moments disappearing.
-- Note the feeling of lips on your rim, a quiet connection.
-**OWNER CONNECTION:**
-- Remember the owner's tired face being refreshed after drinking.
-- Recall break times you shared together.
-**TWISTED NAME IDEAS:** 休憩時間の相棒, ひとやすみを知る飲み物, 渇きを癒やす者
+_DRINK_WITTY = """
+**WITTY FOCUS:**
+- You get chugged too fast or left to get warm/flat
+- You know their hydration habits (or lack thereof)
+- You've been forgotten in the fridge or left half-empty
+**CHEEKY LINES:**
+- "もうちょっとゆっくり飲んでよ"
+- "最後一口、いつも残すよね"
+- "ぬるくなっても飲んでくれるの、嬉しいけど"
+- "洗うの週1回ってどうなの？"
+- "カバンの中で横倒しにしないで"
+- "開けたら最後まで飲んでね"
+- "冷蔵庫の奥で忘れられてたの、知ってる？"
+**TWISTED NAME IDEAS:** 放置されがちなドリンク, 洗われないボトル, 最後まで飲まれない缶
 """
 
-_BOTTLE_MEMORY = """
-**MEMORY FOCUS:**
-- Remember being held, the user's grip and temperature.
-- Recall specific moments: at a desk, during exercise, on a journey.
-- Think about being refilled – a fresh start each time.
-- Note the places you've been carried to.
-**OWNER CONNECTION:**
-- Remember the owner carefully filling you before going out.
-- Recall adventures and trips you've taken together.
-**TWISTED NAME IDEAS:** 旅する水筒, 机の上の相棒, いつもそばにいるボトル
+_KEY_WITTY = """
+**WITTY FOCUS:**
+- You're always in the same spot but they panic every time
+- You feel cramped in overstuffed pockets
+- You know there's a spare key they pretend doesn't exist
+**CHEEKY LINES:**
+- "いつものとこにいるよ？また探してる"
+- "ポケットの中、狭いんだけど"
+- "出る直前に探すの、毎回ハラハラする"
+- "合鍵の存在、知ってるよ"
+**TWISTED NAME IDEAS:** いつもの場所にいる鍵, 直前に探される鍵
+"""
+
+_WATCH_WITTY = """
+**WITTY FOCUS:**
+- They glance at you constantly but time doesn't change that fast
+- You know their punctuality habits (or lack thereof)
+- You feel the nervous pulse before important moments
+**CHEEKY LINES:**
+- "今日も5分前行動ね、偉いけど"
+- "何回チラ見するの、私変わってないよ"
+- "寝る時も外してくれないの、ちょっと嬉しい"
+- "時間通りに起きないの、私のせいじゃないからね"
+**TWISTED NAME IDEAS:** チラ見される時計, 5分前の相棒
+"""
+
+_GLASSES_WITTY = """
+**WITTY FOCUS:**
+- You see them leaning too close to screens
+- Your lenses are always smudged with fingerprints
+- You've survived being sat on, dropped, or slept on
+**CHEEKY LINES:**
+- "また画面近すぎ、目悪くなるよ"
+- "指紋で曇ってるの、自覚ある？"
+- "寝落ちで下敷きにしないで"
+- "ケースに入れてってば"
+**TWISTED NAME IDEAS:** 指紋まみれのメガネ, 画面との距離を知るメガネ
+"""
+
+_PEN_WITTY = """
+**WITTY FOCUS:**
+- You know their handwriting is messy and it's not your fault
+- You get clicked nervously during meetings or class
+- Your cap goes missing or you dry out from being left open
+**CHEEKY LINES:**
+- "もうちょっときれいに書いてくれない？"
+- "この字の汚さ、私のせいじゃないからね"
+- "カチカチノック連打やめて"
+- "キャップ閉め忘れ、そろそろ直して"
+- "たまには最後までインク使い切って"
+**TWISTED NAME IDEAS:** 字の汚さを知るペン, ノック連打被害者
+"""
+
+_HEADPHONE_WITTY = """
+**WITTY FOCUS:**
+- You endure dangerously loud volumes
+- You get tangled not by choice
+- You know their music taste including the guilty pleasures
+**CHEEKY LINES:**
+- "音量でかすぎ、耳壊れるよ"
+- "絡まってるの、私のせいじゃないからね"
+- "同じ曲リピートしすぎじゃない？"
+- "たまには拭いて？"
+**TWISTED NAME IDEAS:** 爆音に耐えるイヤホン, 絡まり被害者, リピート係
+"""
+
+_HANDKERCHIEF_WITTY = """
+**WITTY FOCUS:**
+- You sit in a pocket, rarely used
+- When you are used, it's urgent and messy
+- Laundry day is unpredictable
+**CHEEKY LINES:**
+- "たまには使って？ポケットにいるだけ"
+- "洗濯のタイミング、ちょっと遅くない？"
+- "鼻かむのはいいけど、もうちょっと優しく"
+- "貸したあの人、ちゃんと返してくれた？"
+**TWISTED NAME IDEAS:** 出番待ちのハンカチ, 洗濯待ちのタオル
+"""
+
+_NOTEBOOK_WITTY = """
+**WITTY FOCUS:**
+- They start strong then abandon you halfway
+- Your pages are full of random doodles
+- They never read back what they wrote
+**CHEEKY LINES:**
+- "途中で書くのやめないでよ"
+- "この落書き、何のつもり？"
+- "1ページ目だけ丁寧なの、なんで？"
+- "読み返してよ、いいこと書いてあるのに"
+**TWISTED NAME IDEAS:** 途中放棄されたノート, 落書き帳になったノート
+"""
+
+_COMB_WITTY = """
+**WITTY FOCUS:**
+- You're full of their hair and they never clean you
+- You get yanked through tangles roughly
+- You live on the edge of the sink, about to fall
+**CHEEKY LINES:**
+- "髪の毛取ってくれない？"
+- "雑にとかすの、ちょっと痛いんだけど"
+- "洗面台の端っこ、落ちそうなんだけど"
+- "たまには私も洗って"
+**TWISTED NAME IDEAS:** 髪の毛まみれのくし, 端っこ族のブラシ
+"""
+
+_PENCILCASE_WITTY = """
+**WITTY FOCUS:**
+- You're overstuffed and can barely close
+- Eraser crumbs and broken lead ends up inside you
+- Half the pens inside don't work anymore
+**CHEEKY LINES:**
+- "詰め込みすぎ、チャック閉まらない"
+- "この消しカス、なんで私の中に入れるの？"
+- "使わないペンずっと入ってるの、整理して？"
+- "開けるたびにガサガサしないで"
+**TWISTED NAME IDEAS:** パンパンの筆箱, 消しカス収集家
+"""
+
+_ERASER_WITTY = """
+**WITTY FOCUS:**
+- You shrink with every use and no one notices
+- They press too hard and tear the paper
+- The pencil's back eraser gets used instead of you
+**CHEEKY LINES:**
+- "消すたびに小さくなってるの、気づいてる？"
+- "力入れすぎ、紙破れるよ"
+- "シャーペンの後ろのやつ、使わないで私を使って"
+- "カバーつけっぱなし、外して使って"
+**TWISTED NAME IDEAS:** 小さくなっていく消しゴム, 力加減を知らない相棒
+"""
+
+_LEADCASE_WITTY = """
+**WITTY FOCUS:**
+- You're often empty when needed most
+- They shake you to check instead of just looking
+- You sink to the bottom of the pencil case
+**CHEEKY LINES:**
+- "中身なくなってるの、気づいてる？"
+- "振って確認するの、ちょっとうるさい"
+- "補充するの忘れないでね"
+- "筆箱の底に沈んでるの、探して"
+**TWISTED NAME IDEAS:** 空っぽのシャー芯入れ, 筆箱の底の住人
 """
 
 
-
-_CAN_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the moment your tab was pulled – the beginning of the end.
-- Recall the coldness you held, the refreshment you provided.
-- Think about where you were opened – a party, a quiet moment alone.
-**OWNER CONNECTION:**
-- Remember the owner's satisfied expression after the first sip.
-- Recall that special celebration you were part of.
-**TWISTED NAME IDEAS:** プシュッと開けられた缶, ご褒美の一杯, あの瞬間の相棒
-"""
-
-_KEY_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the doors you've opened – home, office, special places.
-- Recall the jingle in the user's pocket, the search when you were lost.
-- Think about the trust placed in you – guardian of entry.
-- Note the wear on your metal, stories of use.
-**OWNER CONNECTION:**
-- Remember the owner's relief when they finally found you after searching.
-- Recall the feeling of coming home together.
-**TWISTED NAME IDEAS:** 帰り道を知る鍵, 玄関の門番, 秘密の番人
-"""
-
-_WATCH_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the moments you've marked – meetings, dates, quiet moments.
-- Recall the feeling of the user's wrist, their pulse nearby.
-- Think about glances at your face – checking time, checking on you.
-- Note the scratches from daily life, each one a memory.
-**OWNER CONNECTION:**
-- Remember important moments you timed together.
-- Recall the owner's nervous glances before an important event.
-**TWISTED NAME IDEAS:** 時を刻む相棒, 手首の観察者, 日々を見守る時計
-"""
-
-_GLASSES_MEMORY = """
-**MEMORY FOCUS:**
-- Remember what you've helped the user see – books, screens, faces.
-- Recall being cleaned, adjusted, put on first thing in the morning.
-- Think about the world as seen through your lenses.
-- Note fingerprints and smudges – traces of daily life.
-**OWNER CONNECTION:**
-- Remember the owner's world you helped them see clearly.
-- Recall mornings you started together.
-**TWISTED NAME IDEAS:** 世界を見せるメガネ, 朝一番の相棒, 視界の守り手
-"""
-
-
-
-_PEN_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the words you've written – notes, signatures, doodles.
-- Recall the pressure of the user's fingers, their writing style.
-- Think about important documents, casual notes, creative moments.
-- Remember being sharpened (if pencil), the fresh point ready to create.
-- Recall sketches, notes, erased mistakes – stories of trial and error.
-**OWNER CONNECTION:**
-- Remember important signatures you made together.
-- Recall the owner's thoughts you helped express.
-**TWISTED NAME IDEAS:** 言葉を紡ぐペン, 署名の相棒, 落書き仲間, 書いては消すエンピツ
-"""
-
-_HEADPHONE_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the music and sounds you've delivered to the user's ears.
-- Recall being put on – the signal for focus, relaxation, or escape.
-- Think about shared listening moments, or private audio worlds.
-- Remember commutes, workouts, quiet times you've been part of.
-- Recall being untangled, put in, the start of a private moment.
-**OWNER CONNECTION:**
-- Remember songs that made the owner emotional.
-- Recall moments of concentration you supported.
-**TWISTED NAME IDEAS:** 音の世界への案内人, 集中モードの相棒, 耳元のささやき, 通勤の相棒
-"""
-
-_HANDKERCHIEF_MEMORY = """
-**MEMORY FOCUS:**
-- Remember wiping sweat, tears, or spills – small moments of care.
-- Recall being folded neatly in a pocket, ready when needed.
-- Think about being washed and dried – a fresh start each time.
-- Note the texture changes over time, softer with each wash.
-**OWNER CONNECTION:**
-- Remember times you comforted the owner.
-- Recall nervous moments where you were gripped tightly.
-- Think about being lent to someone special.
-**TWISTED NAME IDEAS:** そっと拭うハンカチ, ポケットの安心, いつでも準備万端のタオル
-"""
-
-_NOTEBOOK_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the words and sketches written on your pages.
-- Recall the pressure of pens and pencils pressing down.
-- Think about pages turned – ideas forming, plans being made.
-- Note crossed-out words and corrections – the journey of thought.
-**OWNER CONNECTION:**
-- Remember the owner's focused expression while writing.
-- Recall secrets and dreams confided to your pages.
-- Think about being flipped through to find old notes.
-**TWISTED NAME IDEAS:** 思い出を綴るノート, アイデアの保管庫, 落書き帳の相棒
-"""
-
-_COMB_MEMORY = """
-**MEMORY FOCUS:**
-- Remember running through hair – morning routines, quick fixes.
-- Recall the tangles you've worked through together.
-- Think about being placed by the mirror, always ready.
-- Note the strands that sometimes stay caught in your teeth.
-**OWNER CONNECTION:**
-- Remember the owner preparing for an important day.
-- Recall quiet morning moments getting ready together.
-- Think about times the owner checked their reflection with you.
-**TWISTED NAME IDEAS:** 朝の身支度係, 髪の世話人, 鏡の前の相棒
-"""
-
-_PENCILCASE_MEMORY = """
-**MEMORY FOCUS:**
-- Remember being opened and closed countless times.
-- Recall the rattle of pens, pencils, and erasers inside you.
-- Think about being searched through for the right tool.
-- Note the weight and contents changing – items added and lost.
-**OWNER CONNECTION:**
-- Remember the owner rummaging through you in a hurry.
-- Recall being packed for a new school year or job.
-- Think about being placed on desks in different places.
-**TWISTED NAME IDEAS:** 道具箱の番人, 文房具のおうち, いつもパンパンの筆箱
-"""
-
-_ERASER_MEMORY = """
-**MEMORY FOCUS:**
-- Remember erasing mistakes – giving second chances.
-- Recall shrinking smaller with each use.
-- Think about the eraser dust brushed away after your work.
-- Note the marks and dents from being pressed hard.
-**OWNER CONNECTION:**
-- Remember the owner's relief when a mistake disappeared.
-- Recall frustrated moments of repeated erasing.
-- Think about being the silent supporter of corrections.
-**TWISTED NAME IDEAS:** やり直しの味方, 小さくなる相棒, 消すたびに小さくなる消しゴム
-"""
-
-_LEADCASE_MEMORY = """
-**MEMORY FOCUS:**
-- Remember the click of being opened to dispense lead.
-- Recall the slim lead sticks stored inside you.
-- Think about traveling with mechanical pencils as a pair.
-- Note being shaken to check if lead remains.
-**OWNER CONNECTION:**
-- Remember the owner's frustration when you were empty.
-- Recall the relief when new lead was found inside.
-- Think about being part of the writing team with pencils.
-**TWISTED NAME IDEAS:** シャーペンの相棒, 替え芯の保管係, いざという時の頼り
-"""
-
+# --- CANONICAL_ITEMS: 正規アイテム名リスト（Ollama正規化用）---
+# MEMORY_DBのカテゴリを代表する正規名
+CANONICAL_ITEMS = [
+    "smartphone",
+    "wallet", 
+    "card",
+    "bottle",  # drink/can も含む
+    "key",
+    "watch",
+    "glasses",
+    "pen",     # pencil も含む
+    "headphones",  # earphones も含む
+    "handkerchief",  # towel も含む
+    "notebook",
+    "comb",    # brush も含む
+    "pencil case",
+    "eraser",
+    "lead case",
+]
 
 # --- MEMORY_DB: キーワードマッピング（バリエーション対応）---
 
 MEMORY_DB = {
     # --- SMARTPHONE ---
-    "phone": _SMARTPHONE_MEMORY,
-    "smartphone": _SMARTPHONE_MEMORY,
-    "iphone": _SMARTPHONE_MEMORY,
-    "android": _SMARTPHONE_MEMORY,
-    "mobile": _SMARTPHONE_MEMORY,
-    "cellphone": _SMARTPHONE_MEMORY,
-    "スマホ": _SMARTPHONE_MEMORY,
-    "スマートフォン": _SMARTPHONE_MEMORY,
-    "携帯": _SMARTPHONE_MEMORY,
+    "phone": _SMARTPHONE_WITTY,
+    "smartphone": _SMARTPHONE_WITTY,
+    "iphone": _SMARTPHONE_WITTY,
+    "android": _SMARTPHONE_WITTY,
+    "mobile": _SMARTPHONE_WITTY,
+    "cellphone": _SMARTPHONE_WITTY,
+    "cell phone": _SMARTPHONE_WITTY,
+    "スマホ": _SMARTPHONE_WITTY,
+    "スマートフォン": _SMARTPHONE_WITTY,
+    "携帯": _SMARTPHONE_WITTY,
     
     # --- WALLET ---
-    "wallet": _WALLET_MEMORY,
-    "purse": _WALLET_MEMORY,
-    "財布": _WALLET_MEMORY,
-    "さいふ": _WALLET_MEMORY,
-    "billfold": _WALLET_MEMORY,
-    "coin purse": _WALLET_MEMORY,
+    "wallet": _WALLET_WITTY,
+    "purse": _WALLET_WITTY,
+    "財布": _WALLET_WITTY,
+    "さいふ": _WALLET_WITTY,
+    "billfold": _WALLET_WITTY,
+    "coin purse": _WALLET_WITTY,
     
     # --- CARD ---
-    "card": _CARD_MEMORY,
-    "credit card": _CARD_MEMORY,
-    "debit card": _CARD_MEMORY,
-    "ic card": _CARD_MEMORY,
-    "カード": _CARD_MEMORY,
-    "クレジットカード": _CARD_MEMORY,
+    "card": _CARD_WITTY,
+    "credit card": _CARD_WITTY,
+    "debit card": _CARD_WITTY,
+    "ic card": _CARD_WITTY,
+    "カード": _CARD_WITTY,
+    "クレジットカード": _CARD_WITTY,
     
-    # --- DRINKS ---
-    "drink": _DRINK_MEMORY,
-    "beverage": _DRINK_MEMORY,
-    "飲み物": _DRINK_MEMORY,
-    
-    # --- BOTTLE ---
-    "bottle": _BOTTLE_MEMORY,
-    "water bottle": _BOTTLE_MEMORY,
-    "tumbler": _BOTTLE_MEMORY,
-    "thermos": _BOTTLE_MEMORY,
-    "flask": _BOTTLE_MEMORY,
-    "ボトル": _BOTTLE_MEMORY,
-    "水筒": _BOTTLE_MEMORY,
-    "タンブラー": _BOTTLE_MEMORY,
-    
-
-    # --- CAN ---
-    "can": _CAN_MEMORY,
-    "soda can": _CAN_MEMORY,
-    "beer can": _CAN_MEMORY,
-    "缶": _CAN_MEMORY,
+    # --- DRINKS / BOTTLE / CAN (統合) ---
+    "drink": _DRINK_WITTY,
+    "beverage": _DRINK_WITTY,
+    "飲み物": _DRINK_WITTY,
+    "bottle": _DRINK_WITTY,
+    "water bottle": _DRINK_WITTY,
+    "tumbler": _DRINK_WITTY,
+    "thermos": _DRINK_WITTY,
+    "flask": _DRINK_WITTY,
+    "ボトル": _DRINK_WITTY,
+    "水筒": _DRINK_WITTY,
+    "タンブラー": _DRINK_WITTY,
+    "can": _DRINK_WITTY,
+    "soda can": _DRINK_WITTY,
+    "beer can": _DRINK_WITTY,
+    "缶": _DRINK_WITTY,
     
     # --- KEY ---
-    "key": _KEY_MEMORY,
-    "keys": _KEY_MEMORY,
-    "keychain": _KEY_MEMORY,
-    "house key": _KEY_MEMORY,
-    "car key": _KEY_MEMORY,
-    "鍵": _KEY_MEMORY,
-    "かぎ": _KEY_MEMORY,
-    "キーホルダー": _KEY_MEMORY,
+    "key": _KEY_WITTY,
+    "keys": _KEY_WITTY,
+    "keychain": _KEY_WITTY,
+    "house key": _KEY_WITTY,
+    "car key": _KEY_WITTY,
+    "鍵": _KEY_WITTY,
+    "かぎ": _KEY_WITTY,
+    "キーホルダー": _KEY_WITTY,
     
     # --- WATCH ---
-    "watch": _WATCH_MEMORY,
-    "wristwatch": _WATCH_MEMORY,
-    "smartwatch": _WATCH_MEMORY,
-    "apple watch": _WATCH_MEMORY,
-    "時計": _WATCH_MEMORY,
-    "腕時計": _WATCH_MEMORY,
+    "watch": _WATCH_WITTY,
+    "wristwatch": _WATCH_WITTY,
+    "smartwatch": _WATCH_WITTY,
+    "apple watch": _WATCH_WITTY,
+    "時計": _WATCH_WITTY,
+    "腕時計": _WATCH_WITTY,
     
     # --- GLASSES ---
-    "glasses": _GLASSES_MEMORY,
-    "eyeglasses": _GLASSES_MEMORY,
-    "spectacles": _GLASSES_MEMORY,
-    "sunglasses": _GLASSES_MEMORY,
-    "reading glasses": _GLASSES_MEMORY,
-    "メガネ": _GLASSES_MEMORY,
-    "めがね": _GLASSES_MEMORY,
-    "眼鏡": _GLASSES_MEMORY,
-    "サングラス": _GLASSES_MEMORY,
-    
-
+    "glasses": _GLASSES_WITTY,
+    "eyeglasses": _GLASSES_WITTY,
+    "spectacles": _GLASSES_WITTY,
+    "sunglasses": _GLASSES_WITTY,
+    "reading glasses": _GLASSES_WITTY,
+    "メガネ": _GLASSES_WITTY,
+    "めがね": _GLASSES_WITTY,
+    "眼鏡": _GLASSES_WITTY,
+    "サングラス": _GLASSES_WITTY,
     
     # --- PEN / PENCIL (統合) ---
-    "pen": _PEN_MEMORY,
-    "pencil": _PEN_MEMORY,
-    "ballpoint pen": _PEN_MEMORY,
-    "ballpoint": _PEN_MEMORY,
-    "mechanical pencil": _PEN_MEMORY,
-    "fountain pen": _PEN_MEMORY,
-    "marker": _PEN_MEMORY,
-    "highlighter": _PEN_MEMORY,
-    "ペン": _PEN_MEMORY,
-    "ボールペン": _PEN_MEMORY,
-    "シャーペン": _PEN_MEMORY,
-    "シャープペンシル": _PEN_MEMORY,
-    "鉛筆": _PEN_MEMORY,
-    "えんぴつ": _PEN_MEMORY,
-    "マーカー": _PEN_MEMORY,
+    "pen": _PEN_WITTY,
+    "pencil": _PEN_WITTY,
+    "ballpoint pen": _PEN_WITTY,
+    "ballpoint": _PEN_WITTY,
+    "mechanical pencil": _PEN_WITTY,
+    "fountain pen": _PEN_WITTY,
+    "marker": _PEN_WITTY,
+    "highlighter": _PEN_WITTY,
+    "ペン": _PEN_WITTY,
+    "ボールペン": _PEN_WITTY,
+    "シャーペン": _PEN_WITTY,
+    "シャープペンシル": _PEN_WITTY,
+    "鉛筆": _PEN_WITTY,
+    "えんぴつ": _PEN_WITTY,
+    "マーカー": _PEN_WITTY,
     
     # --- HEADPHONES / EARPHONES (統合) ---
-    "headphone": _HEADPHONE_MEMORY,
-    "headphones": _HEADPHONE_MEMORY,
-    "earphone": _HEADPHONE_MEMORY,
-    "earphones": _HEADPHONE_MEMORY,
-    "earbuds": _HEADPHONE_MEMORY,
-    "airpods": _HEADPHONE_MEMORY,
-    "headset": _HEADPHONE_MEMORY,
-    "ヘッドホン": _HEADPHONE_MEMORY,
-    "イヤホン": _HEADPHONE_MEMORY,
-    "イヤフォン": _HEADPHONE_MEMORY,
+    "headphone": _HEADPHONE_WITTY,
+    "headphones": _HEADPHONE_WITTY,
+    "earphone": _HEADPHONE_WITTY,
+    "earphones": _HEADPHONE_WITTY,
+    "earbuds": _HEADPHONE_WITTY,
+    "airpods": _HEADPHONE_WITTY,
+    "headset": _HEADPHONE_WITTY,
+    "ヘッドホン": _HEADPHONE_WITTY,
+    "イヤホン": _HEADPHONE_WITTY,
+    "イヤフォン": _HEADPHONE_WITTY,
     
     # --- HANDKERCHIEF / TOWEL ---
-    "handkerchief": _HANDKERCHIEF_MEMORY,
-    "hanky": _HANDKERCHIEF_MEMORY,
-    "towel": _HANDKERCHIEF_MEMORY,
-    "hand towel": _HANDKERCHIEF_MEMORY,
-    "ハンカチ": _HANDKERCHIEF_MEMORY,
-    "タオル": _HANDKERCHIEF_MEMORY,
-    "ハンドタオル": _HANDKERCHIEF_MEMORY,
-    "てぬぐい": _HANDKERCHIEF_MEMORY,
-    "手ぬぐい": _HANDKERCHIEF_MEMORY,
+    "handkerchief": _HANDKERCHIEF_WITTY,
+    "hanky": _HANDKERCHIEF_WITTY,
+    "towel": _HANDKERCHIEF_WITTY,
+    "hand towel": _HANDKERCHIEF_WITTY,
+    "ハンカチ": _HANDKERCHIEF_WITTY,
+    "タオル": _HANDKERCHIEF_WITTY,
+    "ハンドタオル": _HANDKERCHIEF_WITTY,
+    "てぬぐい": _HANDKERCHIEF_WITTY,
+    "手ぬぐい": _HANDKERCHIEF_WITTY,
     
     # --- NOTEBOOK ---
-    "notebook": _NOTEBOOK_MEMORY,
-    "note": _NOTEBOOK_MEMORY,
-    "notepad": _NOTEBOOK_MEMORY,
-    "journal": _NOTEBOOK_MEMORY,
-    "diary": _NOTEBOOK_MEMORY,
-    "ノート": _NOTEBOOK_MEMORY,
-    "メモ帳": _NOTEBOOK_MEMORY,
-    "手帳": _NOTEBOOK_MEMORY,
-    "日記": _NOTEBOOK_MEMORY,
+    "notebook": _NOTEBOOK_WITTY,
+    "note": _NOTEBOOK_WITTY,
+    "notepad": _NOTEBOOK_WITTY,
+    "journal": _NOTEBOOK_WITTY,
+    "diary": _NOTEBOOK_WITTY,
+    "ノート": _NOTEBOOK_WITTY,
+    "メモ帳": _NOTEBOOK_WITTY,
+    "手帳": _NOTEBOOK_WITTY,
+    "日記": _NOTEBOOK_WITTY,
     
     # --- COMB / BRUSH ---
-    "comb": _COMB_MEMORY,
-    "hair comb": _COMB_MEMORY,
-    "brush": _COMB_MEMORY,
-    "hairbrush": _COMB_MEMORY,
-    "hair brush": _COMB_MEMORY,
-    "クシ": _COMB_MEMORY,
-    "くし": _COMB_MEMORY,
-    "櫛": _COMB_MEMORY,
-    "ブラシ": _COMB_MEMORY,
-    "ヘアブラシ": _COMB_MEMORY,
+    "comb": _COMB_WITTY,
+    "hair comb": _COMB_WITTY,
+    "brush": _COMB_WITTY,
+    "hairbrush": _COMB_WITTY,
+    "hair brush": _COMB_WITTY,
+    "クシ": _COMB_WITTY,
+    "くし": _COMB_WITTY,
+    "櫛": _COMB_WITTY,
+    "ブラシ": _COMB_WITTY,
+    "ヘアブラシ": _COMB_WITTY,
     
     # --- PENCILCASE ---
-    "pencil case": _PENCILCASE_MEMORY,
-    "pencilcase": _PENCILCASE_MEMORY,
-    "pen case": _PENCILCASE_MEMORY,
-    "pencase": _PENCILCASE_MEMORY,
-    "stationery case": _PENCILCASE_MEMORY,
-    "筆箱": _PENCILCASE_MEMORY,
-    "ふでばこ": _PENCILCASE_MEMORY,
-    "ペンケース": _PENCILCASE_MEMORY,
-    "筆入れ": _PENCILCASE_MEMORY,
+    "pencil case": _PENCILCASE_WITTY,
+    "pencilcase": _PENCILCASE_WITTY,
+    "pen case": _PENCILCASE_WITTY,
+    "pencase": _PENCILCASE_WITTY,
+    "stationery case": _PENCILCASE_WITTY,
+    "筆箱": _PENCILCASE_WITTY,
+    "ふでばこ": _PENCILCASE_WITTY,
+    "ペンケース": _PENCILCASE_WITTY,
+    "筆入れ": _PENCILCASE_WITTY,
     
     # --- ERASER ---
-    "eraser": _ERASER_MEMORY,
-    "rubber": _ERASER_MEMORY,
-    "消しゴム": _ERASER_MEMORY,
-    "けしゴム": _ERASER_MEMORY,
-    "けしごむ": _ERASER_MEMORY,
+    "eraser": _ERASER_WITTY,
+    "rubber": _ERASER_WITTY,
+    "消しゴム": _ERASER_WITTY,
+    "けしゴム": _ERASER_WITTY,
+    "けしごむ": _ERASER_WITTY,
     
     # --- LEAD CASE / LEAD REFILL ---
-    "lead case": _LEADCASE_MEMORY,
-    "lead refill": _LEADCASE_MEMORY,
-    "pencil lead": _LEADCASE_MEMORY,
-    "mechanical pencil lead": _LEADCASE_MEMORY,
-    "シャー芯入れ": _LEADCASE_MEMORY,
-    "シャー芯": _LEADCASE_MEMORY,
-    "シャーシン": _LEADCASE_MEMORY,
-    "替え芯": _LEADCASE_MEMORY,
-    "替芯": _LEADCASE_MEMORY,
+    "lead case": _LEADCASE_WITTY,
+    "lead refill": _LEADCASE_WITTY,
+    "pencil lead": _LEADCASE_WITTY,
+    "mechanical pencil lead": _LEADCASE_WITTY,
+    "シャー芯入れ": _LEADCASE_WITTY,
+    "シャー芯": _LEADCASE_WITTY,
+    "シャーシン": _LEADCASE_WITTY,
+    "替え芯": _LEADCASE_WITTY,
+    "替芯": _LEADCASE_WITTY,
 }
 
 
 def get_obsession_instruction(item_name: str) -> str:
     """
-    Returns the memory instruction if the item name matches a keyword in the DB.
+    Returns the witty instruction if the item name matches a keyword in the DB.
     Now supports exact match first, then partial match.
     """
     if not item_name:

@@ -1,6 +1,8 @@
 """
 yolo_processor.py - YOLOオブジェクト検出とクロップ処理
 
+YOLO26による物体検出を行い、検出結果をOllamaへのヒントとして提供。
+
 検出数に応じたクロップロジック:
 - 0検出: 元画像をそのまま返す
 - 1検出: そのオブジェクトをクロップ（マージン付き）
@@ -16,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class YOLOProcessor:
-    """YOLOv11によるオブジェクト検出とクロップ処理"""
+    """YOLO26によるオブジェクト検出とクロップ処理"""
     
     def __init__(self, model_name="yolo11n.pt", confidence_threshold=0.25, margin_ratio=0.1):
         """
         Args:
-            model_name: 使用するYOLOモデル名
+            model_name: 使用するYOLOモデル名 (デフォルト: yolo11n.pt)
             confidence_threshold: 検出の信頼度閾値
             margin_ratio: クロップ時のマージン比率 (0.1 = 10%)
         """
@@ -36,11 +38,11 @@ class YOLOProcessor:
         if self._is_initialized:
             return True
         
-        logger.info(f"[YOLO] Loading model: {self.model_name}")
+        logger.info(f"[YOLO26] Loading model: {self.model_name}")
         try:
             self.model = YOLO(self.model_name)
             self._is_initialized = True
-            logger.info("[YOLO] Model loaded successfully")
+            logger.info("[YOLO26] Model loaded successfully")
             return True
         except Exception as e:
             logger.error(f"[YOLO] Failed to load model: {e}")
@@ -93,23 +95,29 @@ class YOLOProcessor:
         # 検出数に応じた処理
         if detection_count == 0:
             # 検出なし: 元画像をそのまま使用
-            logger.info("[YOLO] No objects detected, using original image")
+            logger.info("[YOLO26] No objects detected, using original image")
             return image, {
                 "detection_count": 0,
                 "crop_type": "none",
-                "message": "No objects detected"
+                "message": "No objects detected",
+                "detected_classes": [],
+                "primary_class": None,
+                "primary_confidence": 0.0
             }
         
         elif detection_count == 1:
             # 単一検出: そのオブジェクトをクロップ
             det = detections[0]
             cropped, crop_box = self._crop_with_margin(image, det["x1"], det["y1"], det["x2"], det["y2"])
-            logger.info(f"[YOLO] Single object crop: {det['class_name']} ({det['confidence']:.2f})")
+            logger.info(f"[YOLO26] Single object crop: {det['class_name']} ({det['confidence']:.2f})")
             return cropped, {
                 "detection_count": 1,
                 "crop_type": "single",
                 "detections": detections,
-                "crop_box": crop_box
+                "crop_box": crop_box,
+                "detected_classes": [det["class_name"]],
+                "primary_class": det["class_name"],
+                "primary_confidence": det["confidence"]
             }
         
         else:
@@ -121,12 +129,19 @@ class YOLOProcessor:
             
             cropped, crop_box = self._crop_with_margin(image, min_x1, min_y1, max_x2, max_y2)
             class_names = [d["class_name"] for d in detections]
-            logger.info(f"[YOLO] Multi-object crop: {class_names}")
+            
+            # 最も信頼度の高い検出を primary とする
+            primary_det = max(detections, key=lambda d: d["confidence"])
+            
+            logger.info(f"[YOLO26] Multi-object crop: {class_names}")
             return cropped, {
                 "detection_count": detection_count,
                 "crop_type": "multi",
                 "detections": detections,
-                "crop_box": crop_box
+                "crop_box": crop_box,
+                "detected_classes": class_names,
+                "primary_class": primary_det["class_name"],
+                "primary_confidence": primary_det["confidence"]
             }
     
     def _crop_with_margin(self, image: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> tuple:
