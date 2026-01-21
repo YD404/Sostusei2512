@@ -14,13 +14,16 @@ import numpy as np
 import logging
 from ultralytics import YOLO
 
+# YOLO-World用クラス定義をインポート
+from yolo_world_classes import YOLO_WORLD_CLASSES
+
 logger = logging.getLogger(__name__)
 
 
 class YOLOProcessor:
     """YOLO26によるオブジェクト検出とクロップ処理"""
     
-    def __init__(self, model_name="yolo11n.pt", confidence_threshold=0.25, margin_ratio=0.1):
+    def __init__(self, model_name="yolov8s-worldv2.pt", confidence_threshold=0.25, margin_ratio=0.1):
         """
         Args:
             model_name: 使用するYOLOモデル名 (デフォルト: yolo11n.pt)
@@ -38,11 +41,15 @@ class YOLOProcessor:
         if self._is_initialized:
             return True
         
-        logger.info(f"[YOLO26] Loading model: {self.model_name}")
+        logger.info(f"[YOLO-World] Loading model: {self.model_name}")
         try:
             self.model = YOLO(self.model_name)
+            # YOLO-World: カスタムクラスを設定
+            if "world" in self.model_name.lower():
+                self.model.set_classes(YOLO_WORLD_CLASSES)
+                logger.info(f"[YOLO-World] Set {len(YOLO_WORLD_CLASSES)} custom classes")
             self._is_initialized = True
-            logger.info("[YOLO26] Model loaded successfully")
+            logger.info("[YOLO-World] Model loaded successfully")
             return True
         except Exception as e:
             logger.error(f"[YOLO] Failed to load model: {e}")
@@ -95,7 +102,7 @@ class YOLOProcessor:
         # 検出数に応じた処理
         if detection_count == 0:
             # 検出なし: 元画像をそのまま使用
-            logger.info("[YOLO26] No objects detected, using original image")
+            logger.info("[YOLO-World] No objects detected, using original image")
             return image, {
                 "detection_count": 0,
                 "crop_type": "none",
@@ -109,7 +116,7 @@ class YOLOProcessor:
             # 単一検出: そのオブジェクトをクロップ
             det = detections[0]
             cropped, crop_box = self._crop_with_margin(image, det["x1"], det["y1"], det["x2"], det["y2"])
-            logger.info(f"[YOLO26] Single object crop: {det['class_name']} ({det['confidence']:.2f})")
+            logger.info(f"[YOLO-World] Single object crop: {det['class_name']} ({det['confidence']:.2f})")
             return cropped, {
                 "detection_count": 1,
                 "crop_type": "single",
@@ -133,7 +140,7 @@ class YOLOProcessor:
             # 最も信頼度の高い検出を primary とする
             primary_det = max(detections, key=lambda d: d["confidence"])
             
-            logger.info(f"[YOLO26] Multi-object crop: {class_names}")
+            logger.info(f"[YOLO-World] Multi-object crop: {class_names}")
             return cropped, {
                 "detection_count": detection_count,
                 "crop_type": "multi",

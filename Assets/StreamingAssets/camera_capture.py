@@ -91,39 +91,79 @@ def find_physical_camera_index(exclude_keywords=EXCLUDED_CAMERA_KEYWORDS):
     """
     仮想カメラを除外して物理カメラのインデックスを検索
     
+    OpenCVでカメラをスキャンし、FPSと解像度から物理カメラを判別。
+    macOSのカメラ情報も参照して確実に仮想カメラを除外する。
+    
     Returns:
         int: 物理カメラのインデックス、見つからない場合は0
     """
-    cameras = get_macos_cameras()
+    # まずmacOSのカメラ名マッピングを取得（参考情報）
+    macos_cameras = get_macos_cameras()
+    camera_names = {}
+    for cam in macos_cameras:
+        camera_names[cam["index"]] = cam["name"]
     
-    if not cameras:
-        # macOS以外、または情報取得失敗時はOpenCVでスキャン
-        logger.info("OpenCVでカメラをスキャン中...")
-        for i in range(5):
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                # 解像度とFPSで判別（OBSは通常低FPS）
-                fps = cap.get(cv2.CAP_PROP_FPS)
-                if fps > 10:  # OBS仮想カメラは通常5fps程度
-                    logger.info(f"物理カメラ候補発見: Index {i} (FPS: {fps})")
-                    cap.release()
-                    return i
-                cap.release()
-        return 0
+    # OBS仮想カメラのインデックスを特定
+    excluded_indices = set()
+    for idx, name in camera_names.items():
+        name_lower = name.lower()
+        if any(kw in name_lower for kw in exclude_keywords):
+            excluded_indices.add(idx)
+            logger.info(f"[[CAMERA]] 仮想カメラを除外リストに追加: {name} (Index {idx})")
     
-    # macOSカメラ情報を使って除外
-    for cam in cameras:
-        name_lower = cam["name"].lower()
-        is_excluded = any(kw in name_lower for kw in exclude_keywords)
+    # OpenCVで全カメラをスキャン
+    logger.info("[[CAMERA]] OpenCVでカメラをスキャン中...")
+    candidates = []
+    
+    for i in range(10):  # 最大10デバイスをスキャン
+        # 除外リストにあるインデックスはスキップ
+        if i in excluded_indices:
+            logger.info(f"[[CAMERA]] Index {i} をスキップ（除外リスト: {camera_names.get(i, 'Unknown')}）")
+            continue
         
-        if is_excluded:
-            logger.info(f"仮想カメラ除外: {cam['name']} (Index {cam['index']})")
-        else:
-            logger.info(f"物理カメラ選択: {cam['name']} (Index {cam['index']})")
-            return cam["index"]
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            
+            # 追加チェック: 実際にフレームが取れるか
+            ret, _ = cap.read()
+            cap.release()
+            
+            if not ret:
+                logger.info(f"[[CAMERA]] Index {i}: フレーム取得失敗、スキップ")
+                continue
+            
+            name = camera_names.get(i, f"Unknown Camera {i}")
+            
+            # OBS仮想カメラの特徴: 
+            # - FPSが0または非常に低い（30未満）場合がある
+            # - 名前に "OBS" や "Virtual" が含まれる
+            is_likely_virtual = fps < 5 or any(kw in name.lower() for kw in exclude_keywords)
+            
+            if is_likely_virtual:
+                logger.info(f"[[CAMERA]] Index {i} は仮想カメラの可能性大（FPS={fps}, name={name}）、スキップ")
+                continue
+            
+            logger.info(f"[[CAMERA]] 物理カメラ候補: Index {i} = {name} ({width:.0f}x{height:.0f} @ {fps:.1f}fps)")
+            candidates.append({
+                "index": i,
+                "name": name,
+                "fps": fps,
+                "width": width,
+                "height": height
+            })
     
-    logger.warning("物理カメラが見つかりません。デフォルト(0)を使用します。")
-    return 0
+    if not candidates:
+        logger.warning("[[CAMERA]] 物理カメラが見つかりません。Index 1を試します。")
+        # OBS Virtual Cameraが Index 0 で、物理カメラが Index 1 の場合が多い
+        return 1
+    
+    # 最高解像度のカメラを優先（物理カメラは通常高解像度）
+    best = max(candidates, key=lambda c: c["width"] * c["height"])
+    logger.info(f"[[CAMERA]] 選択: Index {best['index']} = {best['name']}")
+    return best["index"]
 
 
 class CameraCapture:

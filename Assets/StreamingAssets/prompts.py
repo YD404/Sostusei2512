@@ -26,14 +26,14 @@ Based on your observations:
 **Step 3: FINAL ANSWER**
 Output ONLY the following JSON. No additional text before or after:
 ```json
-{"is_machine": false, "shape": "Round", "state": "Normal", "item_name": "Coffee Mug"}
+{"is_machine": YOUR_BOOLEAN, "shape": "YOUR_SHAPE", "state": "YOUR_STATE", "item_name": "YOUR_ITEM_NAME"}
 ```
 
 **JSON Schema (strictly follow):**
 - is_machine: boolean (true for electronic/mechanical devices)
 - shape: "Round" | "Sharp" | "Square" | "Other"
 - state: "Old" | "New" | "Dirty" | "Broken" | "Normal"
-- item_name: string (specific object name, Japanese preferred e.g. "スマートフォン")
+- item_name: string (specific object name, Japanese preferred e.g. "ボールペン", "ノート", "時計")
 """
 
 # YOLO検出結果をヒントとして活用するプロンプト
@@ -66,14 +66,14 @@ Based on your observations:
 **Step 3: FINAL ANSWER**
 Output ONLY the following JSON. No additional text before or after:
 ```json
-{{"is_machine": true, "shape": "Sharp", "state": "Normal", "item_name": "Smartphone"}}
+{{"is_machine": YOUR_BOOLEAN, "shape": "YOUR_SHAPE", "state": "YOUR_STATE", "item_name": "YOUR_ITEM_NAME"}}
 ```
 
 **JSON Schema (strictly follow):**
 - is_machine: boolean (true for electronic/mechanical devices)
 - shape: "Round" | "Sharp" | "Square" | "Other"
 - state: "Old" | "New" | "Dirty" | "Broken" | "Normal"
-- item_name: string (specific object name, Japanese preferred e.g. "スマートフォン")
+- item_name: string (specific object name, Japanese preferred e.g. "ボールペン", "ノート", "時計")
 """
 
 # Random Topics List - Memory & Episode Based (Universal for any object)

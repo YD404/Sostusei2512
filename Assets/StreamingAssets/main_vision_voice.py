@@ -261,19 +261,31 @@ def process_frame(frame):
         cv2.imwrite(processed_path, final_frame)
         logger.info(f"[[CAPTURE]] Final processed image saved: {processed_path}")
         
-        # 7. YOLOヒントを生成
+        # 7. YOLOヒントを生成（cell phone検出時はスキップ）
+        # 注意: YOLOは正方形の台を「cell phone」と誤検出しやすいため、
+        #       cell phone検出時はヒントを渡さず、Ollamaに純粋に画像判断させる
         yolo_hint = None
         primary_class = detection_info.get("primary_class")
         primary_confidence = detection_info.get("primary_confidence", 0.0)
         detected_classes = detection_info.get("detected_classes", [])
         
+        # cell phone / mobile phone をフィルタリング
+        SKIP_HINT_CLASSES = ["cell phone", "cellphone", "mobile phone", "smartphone"]
+        
         if primary_class:
-            if len(detected_classes) > 1:
-                other_classes = [c for c in detected_classes if c != primary_class]
-                yolo_hint = f"Primary: {primary_class} (confidence: {primary_confidence:.2f}), also detected: {', '.join(other_classes)}"
+            if primary_class.lower() in SKIP_HINT_CLASSES:
+                logger.info(f"[[YOLO HINT]] SKIPPED: '{primary_class}' detected - likely misidentification of the display stand")
+            elif len(detected_classes) > 1:
+                # 他の検出からもcell phoneを除外
+                other_classes = [c for c in detected_classes if c != primary_class and c.lower() not in SKIP_HINT_CLASSES]
+                if other_classes:
+                    yolo_hint = f"Primary: {primary_class} (confidence: {primary_confidence:.2f}), also detected: {', '.join(other_classes)}"
+                else:
+                    yolo_hint = f"{primary_class} (confidence: {primary_confidence:.2f})"
+                logger.info(f"[[YOLO HINT]] Generated: {yolo_hint}")
             else:
                 yolo_hint = f"{primary_class} (confidence: {primary_confidence:.2f})"
-            logger.info(f"[[YOLO HINT]] Generated: {yolo_hint}")
+                logger.info(f"[[YOLO HINT]] Generated: {yolo_hint}")
         
         # 8. Ollamaで分析（最終処理済み画像を使用、YOLOヒント付き）
         analysis_data = ollama_client.analyze_image(processed_path, yolo_hint=yolo_hint)
