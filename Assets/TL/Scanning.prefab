@@ -368,9 +368,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imageHeart: {fileID: 701085659336013881}
-  minBPM: 10
-  maxBPM: 55
-  accelerationDuration: 20
+  startBPM: 10
+  maxBPM: 100
+  startScale: 0.5
+  maxScale: 1.25
+  startVolume: 0.3
+  maxVolume: 1
+  halfLife: 8
+  boostBPM: 15
+  boostScale: 0.03
+  boostVolume: 0.05
 --- !u!1 &5343243896249468890
 GameObject:
   m_ObjectHideFlags: 0
