@@ -25,7 +25,7 @@ graph LR
         YOLO[yolo_processor.py]
         Ollama[ollama_client.py]
         DeepSeek[deepseek_client.py]
-        Voice[voice_client.py (Disabled)]
+        Voice["voice_client.py (Disabled)"]
     end
 ```
 
@@ -35,24 +35,24 @@ graph LR
 
 ```mermaid
 flowchart TD
-    A[CAPTURE コマンド受信] --> B[カメラ撮影 (camera_capture.py)]
-    B --> C[露出安定待ち (Warmup)]
-    C --> D[5フレーム連写]
-    D --> E[中央値合成 (フリッカー対策)]
-    E --> F[raw/に保存 (元画像)]
+    A["CAPTURE コマンド受信"] --> B["カメラ撮影 (camera_capture.py)"]
+    B --> C["露出安定待ち (Warmup)"]
+    C --> D["5フレーム連写"]
+    D --> E["中央値合成 (フリッカー対策)"]
+    E --> F["raw/に保存 (元画像)"]
     
-    F --> G[YOLO検出 (yolo_processor.py)]
+    F --> G["YOLO検出 (yolo_processor.py)"]
     G --> H{検出数}
     H -->|0| I[元画像を使用]
     H -->|1| J[単一オブジェクトクロップ]
     H -->|2+| K[全オブジェクト統合クロップ]
     
-    I --> L[明度補正 & CLAHE]
+    I --> L["明度補正 & CLAHE"]
     J --> L
     K --> L
     
-    L --> M[背景除去 (rembg)]
-    M --> N[capture/に保存 (最終画像)]
+    L --> M["背景除去 (rembg)"]
+    M --> N["capture/に保存 (最終画像)"]
     N --> O[Ollama詳細分析へ]
 ```
 
