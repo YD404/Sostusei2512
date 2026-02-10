@@ -25,7 +25,7 @@ graph TD
     end
 
     subgraph External["外部サービス"]
-        Ollama -->|ローカル| OllamaAPI((Ollama qwen2.5vl:7b))
+        Ollama -->|ローカル| OllamaAPI((Ollama qwen3-vl:8b))
         DeepSeek -->|HTTPS| DeepSeekAPI((DeepSeek API))
         Voice -->|ローカル| COEIROINK((COEIROINK))
     end
@@ -81,7 +81,7 @@ sequenceDiagram
 
 ### 🔵 メインオーケストレーター
 
-#### [main_vision_voice.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/main_vision_voice.py)
+#### [main_vision_voice.py](../Assets/StreamingAssets/main_vision_voice.py)
 **役割:** 全体の処理フローを統括。stdin監視、各モジュール呼び出し、stdout出力
 
 **主要関数:**
@@ -126,7 +126,7 @@ def determine_persona(analysis_data):
 
 ### 🟢 カメラ制御
 
-#### [camera_capture.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/camera_capture.py)
+#### [camera_capture.py](../Assets/StreamingAssets/camera_capture.py)
 **役割:** フリッカー対策付きカメラ撮影モジュール
 
 **CameraCaptureクラス:**
@@ -168,7 +168,7 @@ kill_virtual_camera_processes()
 
 ### 🟡 オブジェクト検出
 
-#### [yolo_processor.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/yolo_processor.py)
+#### [yolo_processor.py](../Assets/StreamingAssets/yolo_processor.py)
 **役割:** YOLOv11によるオブジェクト検出とクロップ処理
 
 **YOLOProcessorクラス:**
@@ -208,8 +208,8 @@ def detect_and_crop(self, image):
 
 ### 🔴 AI クライアント
 
-#### [ollama_client.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/ollama_client.py)
-**役割:** ローカルOllama（qwen2.5vl:7b）への画像分析リクエスト
+#### [ollama_client.py](../Assets/StreamingAssets/ollama_client.py)
+**役割:** ローカルOllama（qwen3-vl:8b）への画像分析リクエスト
 
 **分析フロー:**
 1. 画像をBase64エンコード
@@ -244,7 +244,7 @@ def _normalize_keys(self, data):
 
 ---
 
-#### [deepseek_client.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/deepseek_client.py)
+#### [deepseek_client.py](../Assets/StreamingAssets/deepseek_client.py)
 **役割:** DeepSeek APIへのセリフ生成リクエスト
 
 **リクエスト構造:**
@@ -278,7 +278,7 @@ def generate_dialogue(self, item_name, context_str, topic, obsession_instruction
 
 ---
 
-#### [voice_client.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/voice_client.py)
+#### [voice_client.py](../Assets/StreamingAssets/voice_client.py)
 **役割:** COEIROINK（ローカルTTS）への音声合成リクエスト
 
 **APIエンドポイント:** `http://localhost:50032/v1/synthesis`
@@ -287,7 +287,7 @@ def generate_dialogue(self, item_name, context_str, topic, obsession_instruction
 
 ### 🟣 プロンプト設定
 
-#### [prompts.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/prompts.py)
+#### [prompts.py](../Assets/StreamingAssets/prompts.py)
 **役割:** 分析プロンプト、トピックリスト、ペルソナロジックを定義
 
 **主要定数:**
@@ -321,7 +321,7 @@ Output your conclusion in strict JSON format...
 
 ---
 
-#### [item_obsessions.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/item_obsessions.py)
+#### [item_obsessions.py](../Assets/StreamingAssets/item_obsessions.py)
 **役割:** アイテム別「執着」指示の定義
 
 特定のアイテム名に対して、より具体的な性格付けや話し方の指示を提供。

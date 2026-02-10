@@ -68,7 +68,7 @@ stateDiagram-v2
 
 ### 🔵 Core Managers（全体制御）
 
-#### [FlowManager.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/FlowManager.cs)
+#### [FlowManager.cs](../Assets/Scripts/FlowManager.cs)
 **役割:** ステートマシンの中核。体験フロー全体を管理。
 
 | メソッド | 呼び出し元 | 動作 |
@@ -101,7 +101,7 @@ private void ChangeState(FlowState newState)
 
 ---
 
-#### [PanelController.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/PanelController.cs)
+#### [PanelController.cs](../Assets/Scripts/PanelController.cs)
 **役割:** メインCanvasのUI切り替え。TimelineState Prefabを動的に生成・制御。
 
 | プロパティ | 型 | 用途 |
@@ -116,7 +116,7 @@ private void ChangeState(FlowState newState)
 
 ---
 
-#### [SubPanelController.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/SubPanelController.cs)
+#### [SubPanelController.cs](../Assets/Scripts/SubPanelController.cs)
 **役割:** サブディスプレイ（2画面目）の制御。Scanning中はログ表示、Message中はメッセージ表示。
 
 | メソッド | 呼び出し元 | 動作 |
@@ -130,7 +130,7 @@ private void ChangeState(FlowState newState)
 
 ### 🟢 Python Integration（外部連携）
 
-#### [PythonLauncher.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/PythonLauncher.cs)
+#### [PythonLauncher.cs](../Assets/Scripts/PythonLauncher.cs)
 **役割:** Pythonプロセスの起動・管理・通信
 
 **プロセス間通信:**
@@ -148,7 +148,7 @@ Unity (C#) <──stdout── Python
 
 ---
 
-#### [PythonMessageRouter.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/PythonMessageRouter.cs)
+#### [PythonMessageRouter.cs](../Assets/Scripts/PythonMessageRouter.cs)
 **役割:** Pythonログの解析・振り分け。「司令塔」として各コンポーネントに通知。
 
 **タグ検出ロジック:**
@@ -175,7 +175,7 @@ public void OnPythonOutput(string line)
 
 ---
 
-#### [captureTrigger.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/captureTrigger.cs)
+#### [captureTrigger.cs](../Assets/Scripts/captureTrigger.cs)
 **役割:** キー入力（スペース）を検知し、Pythonにキャプチャコマンドを送信
 
 **入力制御ロジック:**
@@ -188,7 +188,7 @@ public void OnPythonOutput(string line)
 
 ### 🟡 Visual Effects & UI（演出・表示）
 
-#### [PythonMessageTMP.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/PythonMessageTMP.cs)
+#### [PythonMessageTMP.cs](../Assets/Scripts/PythonMessageTMP.cs)
 **役割:** 生成されたメッセージ本文とクレジットを表示
 
 | メソッド | 動作 |
@@ -199,7 +199,7 @@ public void OnPythonOutput(string line)
 
 ---
 
-#### [TypewriterEffectTMP.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/TypewriterEffectTMP.cs)
+#### [TypewriterEffectTMP.cs](../Assets/Scripts/TypewriterEffectTMP.cs)
 **役割:** TextMeshProUGUIにタイプライター演出を適用
 
 | プロパティ/イベント | 用途 |
@@ -215,7 +215,7 @@ public void OnPythonOutput(string line)
 
 ---
 
-#### [RuneSpawner.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/RuneSpawner.cs)
+#### [RuneSpawner.cs](../Assets/Scripts/RuneSpawner.cs)
 **役割:** メッセージを1文字ずつ空間に浮遊させるルーン文字演出
 
 **生成ロジック:**
@@ -226,7 +226,7 @@ public void OnPythonOutput(string line)
 
 ---
 
-#### [MessageHistoryDisplay.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/MessageHistoryDisplay.cs)
+#### [MessageHistoryDisplay.cs](../Assets/Scripts/MessageHistoryDisplay.cs)
 **役割:** Waiting状態で過去のMessage.txtからランダムにメッセージを流す（Matrix風）
 
 **表示ロジック:**
@@ -238,7 +238,7 @@ public void OnPythonOutput(string line)
 
 ---
 
-#### [ImageHeart.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ImageHeart.cs)
+#### [ImageHeart.cs](../Assets/Scripts/ImageHeart.cs)
 **役割:** UI Imageに鼓動演出（スケール・透明度の周期変化 + 鼓動音）
 
 **BPM連動ロジック:**
@@ -250,7 +250,7 @@ public void OnPythonOutput(string line)
 
 ### 🔴 Audio & State-Based（音声・状態連動）
 
-#### [BGMSystem.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/BGMSystem.cs)
+#### [BGMSystem.cs](../Assets/Scripts/BGMSystem.cs)
 **役割:** Waiting状態専用のBGM再生システム
 
 **状態連動ロジック:**
@@ -268,7 +268,7 @@ void Update()
 
 ---
 
-#### [MessageVoicePlayer.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/MessageVoicePlayer.cs)
+#### [MessageVoicePlayer.cs](../Assets/Scripts/MessageVoicePlayer.cs)
 **役割:** Pythonが生成した音声ファイル（`voice/*.wav`）を監視・再生
 
 **再生フロー:**
@@ -279,7 +279,7 @@ void Update()
 
 ---
 
-#### [QuoteCardDisplay.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/QuoteCardDisplay.cs)
+#### [QuoteCardDisplay.cs](../Assets/Scripts/QuoteCardDisplay.cs)
 **役割:** Waiting状態で過去のメッセージと対応画像をスライドショー表示
 
 **データソース:** `StreamingAssets/MessagePairs.json`
@@ -295,16 +295,16 @@ void Update()
 
 | スクリプト | 役割 |
 |:---|:---|
-| [TimelineState.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/TimelineState.cs) | 各状態のUIプレハブにアタッチ。Enter()/Exit()でTimeline再生・停止 |
-| [InputExitHandler.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/InputExitHandler.cs) | ESCキー終了、X3連打でキャッシュ削除 |
-| [ActivateSubDisplay.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ActivateSubDisplay.cs) | マルチディスプレイ初期化 |
-| [ImageFader.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ImageFader.cs) | UI画像のフェードイン/アウト |
-| [ImageRotator.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ImageRotator.cs) | 画像回転演出 |
-| [ImageSway.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ImageSway.cs) | 画像ゆらゆら演出 |
-| [ImageCutoff.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ImageCutoff.cs) | SpriteMaskによるカットオフ演出 |
-| [WaitingSlideshow.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/WaitingSlideshow.cs) | Waiting状態での画像スライドショー |
-| [ScanningProgressController.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ScanningProgressController.cs) | Scanning中のBPM加速制御 |
-| [ScanningTextDisplay.cs](file:///Users/asanolab/Sotsusei1107/Assets/Scripts/ScanningTextDisplay.cs) | Scanning中のテキスト表示 |
+| [TimelineState.cs](../Assets/Scripts/TimelineState.cs) | 各状態のUIプレハブにアタッチ。Enter()/Exit()でTimeline再生・停止 |
+| [InputExitHandler.cs](../Assets/Scripts/InputExitHandler.cs) | ESCキー終了、X3連打でキャッシュ削除 |
+| [ActivateSubDisplay.cs](../Assets/Scripts/ActivateSubDisplay.cs) | マルチディスプレイ初期化 |
+| [ImageFader.cs](../Assets/Scripts/ImageFader.cs) | UI画像のフェードイン/アウト |
+| [ImageRotator.cs](../Assets/Scripts/ImageRotator.cs) | 画像回転演出 |
+| [ImageSway.cs](../Assets/Scripts/ImageSway.cs) | 画像ゆらゆら演出 |
+| [ImageCutoff.cs](../Assets/Scripts/ImageCutoff.cs) | SpriteMaskによるカットオフ演出 |
+| [WaitingSlideshow.cs](../Assets/Scripts/WaitingSlideshow.cs) | Waiting状態での画像スライドショー |
+| [ScanningProgressController.cs](../Assets/Scripts/ScanningProgressController.cs) | Scanning中のBPM加速制御 |
+| [ScanningTextDisplay.cs](../Assets/Scripts/ScanningTextDisplay.cs) | Scanning中のテキスト表示 |
 
 ---
 

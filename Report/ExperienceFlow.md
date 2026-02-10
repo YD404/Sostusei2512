@@ -17,7 +17,7 @@ flowchart TB
         B["🪞 距離センサー反応"]
         C["📷 webカメラ撮影"]
         D["🔍 画像処理（YOLO）"]
-        E["🎁 物体認識（qwen2.5vl）"]
+        E["🎁 物体認識（qwen3-vl）"]
   end
  subgraph s3["外部"]
         F["💭 AIがセリフ生成（DeepSeekAIP）"]
@@ -85,7 +85,7 @@ flowchart TB
     A[Unityからの通知（標準入力）] --> B[**YOLO**<br>物体検出し画像の切り抜き]
     B --> C[**OpenCV**<br>色調・ガンマ補正]
     C --> D[**rembg**<br>余計な背景の削除]
-    D --> E[**ローカルLLM（qwen2.5vl）**<br> 物体識別]
+    D --> E[**ローカルLLM（qwen3-vl）**<br> 物体識別]
     E --> F[**クラウドLLM（DeepSeek）**<br>セリフ生成]
     F --> G[Unityへの通知（標準出力）]
 ```
@@ -93,7 +93,7 @@ flowchart TB
 | 項目 | 内容 |
 |------|------|
 | **画面表示** | 「Scanning...」「Analyzing...」などの演出 |
-| **物体認識** | ローカルLLM（qwen2.5vl:7b）で「何が写っているか」を識別 |
+| **物体認識** | ローカルLLM（qwen3-vl:8b）で「何が写っているか」を識別 |
 | **セリフ生成** | クラウドLLM（DeepSeek）で「その物なら言いそうなこと」を生成 |
 | **音声合成** | 生成されたセリフを音声に変換 |
 | **所要時間** | 約10〜20秒 |

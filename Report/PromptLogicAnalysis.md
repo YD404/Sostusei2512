@@ -3,7 +3,7 @@
 本レポートでは、`Ollama` (画像分析) モデルのプロンプト構造とロジックについて記述します。
 
 > [!NOTE]
-> DeepSeek (対話生成) のプロンプトについては、[DeepSeekPromptDetailedReport.md](file:///Users/asanolab/Sotsusei1107/Report/DeepSeekPromptDetailedReport.md) を参照してください。
+> DeepSeek (対話生成) のプロンプトについては、[DeepSeekPromptDetailedReport.md](../Report/DeepSeekPromptDetailedReport.md) を参照してください。
 
 ---
 
@@ -13,9 +13,9 @@
 
 | 項目 | 値 |
 |------|---|
-| **モデル** | `qwen2.5vl:7b` (デフォルト) |
-| **クライアントファイル** | [ollama_client.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/ollama_client.py) |
-| **プロンプトファイル** | [prompts.py](file:///Users/asanolab/Sotsusei1107/Assets/StreamingAssets/prompts.py) |
+| **モデル** | `qwen3-vl:8b` (デフォルト) |
+| **クライアントファイル** | [ollama_client.py](../Assets/StreamingAssets/ollama_client.py) |
+| **プロンプトファイル** | [prompts.py](../Assets/StreamingAssets/prompts.py) |
 
 ---
 
