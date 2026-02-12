@@ -134,9 +134,9 @@ def analyze_with_ollama(image_data: bytes):
         
         image_base64 = base64.b64encode(image_data).decode("utf-8")
         
-        print("[INFO] Sending to Ollama (qwen3-vl:8b)...")
+        print("[INFO] Sending to Ollama (qwen2.5vl:7b)...")
         response = ollama.chat(
-            model="qwen3-vl:8b",
+            model="qwen2.5vl:7b",
             messages=[{
                 "role": "user",
                 "content": prompts.ANALYSIS_PROMPT,

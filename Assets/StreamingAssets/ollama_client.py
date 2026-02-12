@@ -10,7 +10,7 @@ import prompts
 logger = logging.getLogger(__name__)
 
 class OllamaClient:
-    def __init__(self, model_name="qwen3-vl:8b"):
+    def __init__(self, model_name="qwen2.5vl:7b"):
         self.model_name = model_name
 
     def extract_json(self, text):
@@ -70,7 +70,7 @@ class OllamaClient:
         normalized.setdefault("state", "Normal")
         normalized.setdefault("item_name", "Unknown Object")
         normalized.setdefault("item_category", "other")
-        normalized.setdefault("confidence", 0.5)
+        normalized.setdefault("confidence", 1.0)
         
         return normalized
 
