@@ -64,6 +64,8 @@ public class QuoteCardDisplay : MonoBehaviour
 
         // 吹き出し背景を表示
         if (speechBubbleImage != null) speechBubbleImage.gameObject.SetActive(true);
+        // 画像を表示
+        if (quoteImage != null) quoteImage.gameObject.SetActive(true);
 
         // 表示ループ開始
         displayCoroutine = StartCoroutine(DisplayLoop());
@@ -79,6 +81,8 @@ public class QuoteCardDisplay : MonoBehaviour
         ClearDisplay();
         // 吹き出し背景を非表示
         if (speechBubbleImage != null) speechBubbleImage.gameObject.SetActive(false);
+        // 画像を非表示
+        if (quoteImage != null) quoteImage.gameObject.SetActive(false);
         Debug.Log("[QuoteCardDisplay] 表示停止");
     }
 

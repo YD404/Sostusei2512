@@ -336,7 +336,8 @@ def _process_analysis(analysis_data, filename):
 
     obsession_instruction = item_obsessions.get_obsession_instruction(item_name)
     
-    context_str = f"Context: Machine={is_machine_str}, Shape={shape_val}, State={state_val}."
+    # context_str = f"Context: Machine={is_machine_str}, Shape={shape_val}, State={state_val}."
+    context_str = "" # ユーザー要望により、item_name以外の情報をカット（過去のシステムの名残削除）
     
     import prompts 
     topic = random.choice(prompts.TOPIC_LIST)
